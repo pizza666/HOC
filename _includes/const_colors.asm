@@ -1,0 +1,17 @@
+; colors
+BLACK         =$00
+WHITE         =$01
+RED           =$02
+CYAN          =$03
+PURPLE        =$04
+GREEN         =$05
+BLUE          =$06
+YELLOW        =$07
+ORANGE        =$08
+BROWN         =$09
+PINK          =$0A
+DGREY         =$0B
+GREY          =$0C
+LGREEN        =$0D
+LBLUE         =$0E
+LGREY         =$0F
