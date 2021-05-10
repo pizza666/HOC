@@ -1,11 +1,14 @@
 !source "_includes\system_const.asm"
+!source "_includes\const_scrcodes.asm"
 *=$801
 !basic main
 
 !zone constants
 ; fov vector
+FOVCOUNTER			= $02
 FOVLO						= $05
 FOVHI						= $06
+
 
 ; Zero Pages
 LOB_DATA				= $40		; data lobyte in ZP
@@ -43,17 +46,41 @@ ICON_WEST				= 31
 ; compass
 COMPASSPOS			= SCREEN+$2e2
 COMPASSNORTH		= SCREEN+$293
-COMPASSEAST			= SCREEN+$293
+COMPASSEAST			= SCREEN+$30e
 COMPASSSOUTH		= SCREEN+$3ab
-COMPASSWEST			= SCREEN+$293
+COMPASSWEST			= SCREEN+$308
 
-;wall offsets
+; wall offsets
+W0POS						= SCREEN+$29
+W0CPOS					= SCREENCOLOR+$29
 W1POS 					= SCREEN+$51
 W1CPOS 					= SCREENCOLOR+$51
+W2POS 					= SCREEN+$c9
+W2CPOS 					= SCREENCOLOR+$c9
+W3POS						= SCREEN+$119
+W3CPOS					= SCREENCOLOR+$119
+E0POS						= SCREEN+$3a
+E0CPOS					= SCREENCOLOR+$3a
 E1POS 					= SCREEN+$5f
 E1CPOS 					= SCREENCOLOR+$5f
+E2POS						= SCREEN+$d5
+E2CPOS				  = SCREENCOLOR+$d5
+E3POS 						= SCREEN+$125
+E3CPOS 					= SCREENCOLOR+$125
+N1POS						= SCREEN+$52
+N1CPOS					= SCREENCOLOR+$52
+N2POS						= SCREEN+$cd
+N2CPOS					= SCREENCOLOR+$cd
+N3POS						= SCREEN+$11f
+N3CPOS					= SCREENCOLOR+$11f
+
+
 HORIZONPOS			= SCREEN+$29
 HORIZONCPOS			= SCREENCOLOR+$29
+
+; sprites
+SPR_RAM			 		= 832
+SPR_CURSOR			= 13
 
 ; keyboard
 KEYROWS 				=	$dc00			; peek
@@ -72,57 +99,77 @@ KEYROW_6				= %11011111 ; (223/$df)     |   ,   ($2c)|   @   ($00)|   :   ($3a)|
 KEYROW_7				= %10111111 ; (191/$bf)     |   /   ($2f)|   ^   ($1e)|   =   ($3d)|RGHT-SH($  )|  HOME ($  )|   ;   ($3b)|   *   ($2a)|   £   ($1c)|
 KEYROW_8				= %01111111 ; (127/$7f)     | STOP  ($  )|   q   ($11)|COMMODR($  )| SPACE ($20)|   2   ($32)|CONTROL($  )|  <-   ($1f)|   1   ($31)|
 														;+----+---------+------------+------------+------------+------------+------------+------------+------------+------------+
-; drawing consts
 
-;*=$80d
 main
-!zone initGame
-							; black screen and clear
-							lda #00
-							sta VIC_BORDERCOLOR
-							sta VIC_BACKGROUNDCOLOR
-							
-							; activate multicolor
-							;lda #16
-							;ora $d016
-							;sta $d016
-							
-							; use charset $2000
-							lda #$18		
-							sta VIC_MEMSETUP
-							
-							;
-							lda #09
-						  sta $d022
-							lda #06
-							sta $d023
-							
-							jsr clearScreen							
-							jsr drawUi
-							jsr drawMap;
-							
-							jsr getFov
-							jsr initCanvas
-							;															
-							;			123	         possible map positions											
-							;     465          draw walls in ascending
-						  ;			798	         order to get correct  														
-							;			AxB	         canvas layers		 								
+!zone initScreen
+									lda #COLOR_BLACK
+									sta VIC_BORDERCOLOR
+									sta VIC_BACKGROUNDCOLOR
+									jsr clearScreen
 
+									lda #$18									; use charset at $2000
+									sta VIC_MEMSETUP	
+									; activate multicolor
+									; lda #16
+									; ora $d016
+									; sta $d016
+									; lda #09
+						  		; sta $d022
+									; lda #06
+									; sta $d023
+							
+									jsr drawUi
+									;jsr drawMap;
+									jsr getFov
+									jsr initCanvas
+!zone initSprites
+	
+ 									lda #SPR_CURSOR
+ 									sta SPRITEPOINTER0
+ 									lda #1
+ 									sta VIC_SPRITEACTIVE
+ 									lda #1
+ 									sta VIC_SPRITEMULTICOLOR 									
+									
+									ldx #62
+sprCursorLoad			lda spriteTiles,x
+ 									sta SPR_RAM,x								
+ 									dex		
+ 									bne sprCursorLoad									
+ 									lda #6
+ 									sta VIC_SPRITE0COLOR
+ 									lda #12
+ 									sta VIC_SPRITEMULTICOLOR0
+ 									lda #14
+ 									sta VIC_SPRITEMULTICOLOR1			
+ 									lda #100
+ 									sta VIC_SPRITE0X
+ 									lda #100
+ 									sta VIC_SPRITE0Y
 
 !zone gameloop							
 gameloop									; start the game loop
-wait 					lda #100
-wait1					cmp $d012
+wait 							lda #80
+wait1							cmp $d012
 							bne wait1
-							inc $d020
-							ldx #0
-wait2 				inx
-							bne wait2
-							dec $d020
+;							inc $d020
+;							ldx #255
+;wait2 				dex
+;							bne wait2
+;							dec $d020
+							; TODO refactor the key loop with lsr maybe								
+						
+!zone inputLoops
 
-							; TODO refactor the key loop with lsr maybe							
-!zone readKeyboard								
+
+							jsr getJoy2
+
+movesprite		ldx dx
+							stx VIC_SPRITE0X
+							ldy dy
+							sty VIC_SPRITE0Y
+
+	
 							lda #KEYROW_8				; #8
 key_1					sta KEYROWS
 							lda KEYCOLS
@@ -143,9 +190,8 @@ key_Q					lda KEYCOLS
 							rol pd
 							jsr setDirection
 							jsr getFov
-							jsr initCanvas
-							jsr drawMap
-							jsr drawPlayer											
+							jsr drawHorizon
+							jsr initCanvas											
 key_3					lda #KEYROW_2				; #2
 							sta KEYROWS
 							lda KEYCOLS
@@ -157,21 +203,14 @@ key_3					lda #KEYROW_2				; #2
 key_W					lda KEYCOLS
 							and #2
 							bne key_A
-							lda #$17
-							sta SCREEN+$65
 							jsr movePlayerF
 							jsr setDirection
 							jsr getFov
-							;jsr getWalls
-							;jsr setWalls
-							jsr initCanvas
-							jsr drawMap
-							jsr drawPlayer						
+							jsr drawHorizon
+							jsr initCanvas					
 key_A					lda KEYCOLS
 							and #4
 							bne key_4
-							lda #$01
-							sta SCREEN+$65
 							jsr initCanvas
 							jsr movePlayerW
 							jsr drawMap
@@ -179,14 +218,10 @@ key_A					lda KEYCOLS
 key_4					lda KEYCOLS
 							and #8
 							bne key_S						
-							lda #$34
-							sta SCREEN+$65
 							jsr initCanvas
 key_S					lda KEYCOLS
 							and #32
 							bne key_E							
-							lda #$13
-							sta SCREEN+$65
 							jsr initCanvas
 							jsr movePlayerS
 							jsr drawMap
@@ -199,8 +234,6 @@ key_E					lda KEYCOLS
 							ror pd
 							jsr setDirection
 							jsr getFov
-							;jsr getWalls
-							;jsr setWalls
 							jsr initCanvas
 							jsr drawMap
 							jsr drawPlayer			
@@ -209,14 +242,10 @@ key_5					lda #KEYROW_3			; # 3
 							lda KEYCOLS
 							and #1
 							bne key_D						
-							lda #$35
-							sta SCREEN+$65
 							jsr initCanvas
 key_D					lda KEYCOLS
 							and #4
 							bne key_6
-							lda #$04
-							sta SCREEN+$65
 							jsr initCanvas
 							jsr movePlayerE
 							jsr drawMap
@@ -224,52 +253,42 @@ key_D					lda KEYCOLS
 key_6					lda KEYCOLS
 							and #8
 							bne key_7					
-							lda #$36
-							sta SCREEN+$65
 							jsr initCanvas	
 key_7					lda #KEYROW_4			; #4
 							sta KEYROWS
 							lda KEYCOLS
 							and #1
 							bne key_8				
-							lda #$37
-							sta SCREEN+$65
 							jsr initCanvas
 key_8					lda KEYCOLS
 							and #8
 							bne key_B						
-							lda #$38
-							sta SCREEN+$65
 							jsr initCanvas
 key_B					lda KEYCOLS
 							and #16
 							bne key_9						
-							lda #$02
-							sta SCREEN+$65
 							jsr initCanvas												
 key_9					lda #KEYROW_5		; #5
 							sta KEYROWS
 							lda KEYCOLS
 							and #1
-							bne key_0		
-							lda #$39
-							sta SCREEN+$65														
+							bne key_0																
 							jsr initCanvas									
 key_0					lda KEYCOLS
 							and #8
-							bne printdebugs		
-							lda #$30
-							sta SCREEN+$65														
+					    bne +																
 							jsr initCanvas
 							lda #2
 							sta px
 							sta py
 							jsr drawMap
 							jsr drawPlayer
-
++							
+gameloopEnd		jmp gameloop
+							
+						
 !zone debug							
 printdebugs		jsr clearValues						
-							;jsr initCanvas
 							lda py					   ; player y debug
 							sta value
 							jsr printdec
@@ -308,9 +327,10 @@ printdebugs		jsr clearValues
 							lda resultstr+2
 							sta SCREEN+$72
 							lda #$04
-							sta SCREEN+$71			
+							sta SCREEN+$71
+							rts	
 														
-gameloopEnd		jmp gameloop							
+							
 						
 
 !zone vars
@@ -324,14 +344,47 @@ py						!byte 7,0,0,0				; player y coordinate
 pd						!byte %10001000			; player direction
 pIco					!byte	ICON_NORTH		; which icon to use for the player on map
 
+!zone inputRoutines
+dx						!byte 250,0
+dy						!byte 100
+fire0 				!byte 0							
+
+getJoy2				;lda $dc00
+         			;sta $02			 	
+up       			lda #%00000001
+         			bit $dc00
+         			bne down      	
+         			dec dy      		
+down     			lda #%00000010
+				 			bit $dc00
+         			bne left
+         			inc dy
+left     			lda #%00000100
+         			bit $dc00
+         			bne right
+         			dec dx
+				 			bne right
+				 			lda #1
+				 			eor $d010
+				 			sta $d010
+right    			lda #%00001000
+         			bit $dc00
+         			bne fire
+         			inc dx
+				 			bne fire
+				 			lda #1
+				 			eor $d010
+				 			sta $d010				
+fire 		 			lda #%00010000
+         			bit $dc00
+         			bne end
+end						rts
+
 !zone subRoutines
 ; #  sub routines here
 ; ######################################
 
 ; rotating and moving
-
-; drawing stuff - TODO fixing and shorten this with indirect addressing
-
 drawMap				lda #MAPWIDTH
 							sta CHARDATA_W
 							lda #MAPHIGHT
@@ -348,8 +401,11 @@ drawMap				lda #MAPWIDTH
 							jsr drawPlayer
 							rts
 
-; fov -  directions are px based
+; fov -  directions are pd based
 
+!zone fovRoutines
+
+; these are our FOV registers			
 fov
 w3 !byte 0
 e3 !byte 0
@@ -363,7 +419,7 @@ n1 !byte 0
 w0 !byte 0
 e0 !byte 0
 						
-getFov				lda pd
+getFov				lda pd					; get direction and jsr the correct direction FOV routine
 							cmp #NORTH
 							bne +
 							jsr getFovNorth
@@ -475,11 +531,7 @@ getFovNorth		lda #<map						; 		E3 N3 E3
 							sta HIB_DATA
 							; row with player
 
-++++ 					ldy px						; load the player x
-							lda #$0e					; print N
-							sta COMPASSNORTH
-														
-							ldy px						
+++++ 					ldy px						
 							iny								
 							lda (LOB_DATA),y
 							sta e0						; E0
@@ -490,6 +542,16 @@ getFovNorth		lda #<map						; 		E3 N3 E3
 							lda (LOB_DATA),y
 							sta w0						; W0
 							sta COMPASSPOS+120
+							
+							; draw compass directions
+							lda #S_N
+							sta COMPASSNORTH
+							lda #S_E
+							sta COMPASSEAST
+							lda #S_S
+							sta COMPASSSOUTH
+							lda #S_W
+							sta COMPASSWEST
 							
 							rts							
 
@@ -578,6 +640,17 @@ getFovEast		lda #<map												; 		E3 N3 E3
 							lda (LOB_DATA),y
 							sta e3
 							sta COMPASSPOS+2
+							
+							; draw compass directions
+							lda #S_E
+							sta COMPASSNORTH
+							lda #S_S
+							sta COMPASSEAST
+							lda #S_W
+							sta COMPASSSOUTH
+							lda #S_N
+							sta COMPASSWEST
+							
 +++						rts
 							
 							
@@ -678,7 +751,17 @@ getFovSouth		lda #<map						; 		E0 PL W0
 							dey								
 							lda (LOB_DATA),y
 							sta e3							
-							sta COMPASSPOS+2							
+							sta COMPASSPOS+2	
+	
+							; draw compass directions
+							lda #S_S
+							sta COMPASSNORTH
+							lda #S_W
+							sta COMPASSEAST
+							lda #S_N
+							sta COMPASSSOUTH
+							lda #S_E
+							sta COMPASSWEST						
 							rts
 							
 getFovWest		lda #<map																	; 		E3 N3 E3
@@ -699,18 +782,19 @@ getFovWest		lda #<map																	; 		E3 N3 E3
 							bne -
 							
 							; 1 rows in above of the player													
-+							ldy px							; W0								
++							ldy px							; east walls								
 							lda (LOB_DATA),y
 							sta e0
 							sta COMPASSPOS+122
 							dey
-						  beq +
 							lda (LOB_DATA),y
 							sta e1
-							sta COMPASSPOS+82								
+							sta COMPASSPOS+82	
+							dey							
 							lda (LOB_DATA),y							
 							sta e2
-							sta COMPASSPOS+42								
+							sta COMPASSPOS+42	
+							dey							
 							lda (LOB_DATA),y
 							sta e3
 							sta COMPASSPOS+2	
@@ -722,12 +806,7 @@ getFovWest		lda #<map																	; 		E3 N3 E3
 							sta LOB_DATA
 							lda HIB_DATA
 							adc #0
-							sta HIB_DATA
-							
-							; row with the player
-							ldy px							; PL (N0)
-							lda #$17						
-							sta COMPASSNORTH
+							sta HIB_DATA							
 							
 							ldy px															
 							dey							
@@ -769,11 +848,21 @@ getFovWest		lda #<map																	; 		E3 N3 E3
 							lda (LOB_DATA),y
 							sta w3
 							sta COMPASSPOS		
+							
+							; draw compass directions
+							lda #S_W
+							sta COMPASSNORTH
+							lda #S_N
+							sta COMPASSEAST
+							lda #S_E
+							sta COMPASSSOUTH
+							lda #S_S
+							sta COMPASSWEST
 					
 +++						rts
 					
 							
-setDirection	lda pd
+setDirection	lda pd						; sets the player icon based on the pd value
 							cmp #NORTH
 							bne +
 							ldx #ICON_NORTH
@@ -790,6 +879,83 @@ setDirection	lda pd
 							bne +
 							ldx #ICON_WEST
 							stx pIco
++							rts
+
+						
+!zone canvas
+
+initCanvas		;jsr drawHorizon
+							lda #<fov
+							sta FOVLO
+							lda #>fov
+							sta FOVHI
+							
+							ldy #0
+							sty FOVCOUNTER			
+							lda (FOVLO),y
+							cmp #W
+							bne +
+							;jsr drawW3
++							inc FOVCOUNTER
+							ldy FOVCOUNTER									
+							lda (FOVLO),y
+							cmp #W
+							bne +
+							jsr drawE3
++							inc FOVCOUNTER
+							ldy FOVCOUNTER						
+							lda (FOVLO),y
+							cmp #W
+							bne +
+							jsr drawN3
++							inc FOVCOUNTER
+							ldy FOVCOUNTER									
+							lda (FOVLO),y
+							cmp #W
+							bne +
+							jsr drawW2
++							inc FOVCOUNTER
+							ldy FOVCOUNTER								
+							lda (FOVLO),y
+							cmp #W
+							bne +
+							jsr drawE2
++							inc FOVCOUNTER
+							ldy FOVCOUNTER									
+							lda (FOVLO),y
+							cmp #W
+							bne +
+							jsr drawN2
++							inc FOVCOUNTER
+							ldy FOVCOUNTER									
+							lda (FOVLO),y
+							cmp #W
+							bne +
+							jsr drawW1
++							inc FOVCOUNTER
+							ldy FOVCOUNTER									
+							lda (FOVLO),y
+							cmp #W
+							bne +
+							jsr drawE1
++							inc FOVCOUNTER
+							ldy FOVCOUNTER									
+							lda (FOVLO),y
+							cmp #W
+							bne +
+							jsr drawN1
++							inc FOVCOUNTER
+							ldy FOVCOUNTER									
+							lda (FOVLO),y
+							cmp #W
+							bne +
+							jsr drawW0
++							inc FOVCOUNTER
+							ldy FOVCOUNTER									
+							lda (FOVLO),y
+							cmp #W
+							bne +
+							jsr drawE0												
 +							rts
 
 !zone movePlayer
@@ -927,7 +1093,7 @@ drawChars			ldx #0							; x = 0 for our row number
 - 						lda (LOB_DATA),y		; store the data indirect addressed with y
 						  sta (LOB_SCREEN),y  ; in the screen position
 							dey									; decrement y
-							bpl -								; is y still positive branc to -							
+							bpl -								; is y still positive branch to -							
 							
 							lda LOB_SCREEN			; were done with the row and load the low byte of the screen
 							clc									; clear the carry
@@ -948,408 +1114,262 @@ drawChars			ldx #0							; x = 0 for our row number
 							inx
 							cpx CHARDATA_H
 							bne --
-							rts						
-!zone canvas
-initCanvas		jsr drawHorizon
-							lda #<fov
-							sta FOVLO
-							lda #>fov
-							sta FOVHI
-							
-							ldy #0
-							lda (FOVLO),y
-							cmp #W
-							bne +
-							tya
-							pha
-							jsr drawW3
-							pla
-							tay
-+							iny							
-							lda (FOVLO),y
-							cmp #W
-							bne +
-							tya
-							pha
-							jsr drawE3
-							pla
-							tay
-+							iny							
-							lda (FOVLO),y
-							cmp #W
-							bne +
-							tya
-							pha
-							jsr drawN3
-							pla
-							tay
-+							iny							
-							lda (FOVLO),y
-							cmp #W
-							bne +
-							tya
-							pha
-							jsr drawW2
-							pla
-							tay	
-+							iny							
-							lda (FOVLO),y
-							cmp #W
-							bne +
-							tya
-							pha
-							jsr drawE2
-							pla
-							tay
-+							iny							
-							lda (FOVLO),y
-							cmp #W
-							bne +
-							tya
-							pha
-							jsr drawN2
-							pla
-							tay
-+							iny							
-							lda (FOVLO),y
-							cmp #W
-							bne +
-							tya
-							pha
-							jsr drawW1
-							pla
-							tay	
-+							iny							
-							lda (FOVLO),y
-							cmp #W
-							bne +
-							tya
-							pha
-							jsr drawE1
-							pla
-							tay
-+							iny							
-							lda (FOVLO),y
-							cmp #W
-							bne +
-							tya
-							pha
-							jsr drawN1
-							pla
-							tay
-+							iny							
-							lda (FOVLO),y
-							cmp #W
-							bne +
-							tya
-							pha
-							jsr drawW0
-							pla
-							tay
-+							iny							
-							lda (FOVLO),y
-							cmp #W
-							bne +
-							tya
-							pha
-							jsr drawE0
-							pla
-							tay														
-+							rts					
+							rts
+		
 
 !zone drawCanvas						; single routines for drawing walls, floor and ceiling
-drawW3				ldx #5		
-							lda #$a0
-							ldy #COLOR_DARKGREY
--							sta SCREEN+$0119,x
-							sta SCREEN+$0119+40,x
-							sta SCREEN+$0119+80,x
-							pha
-							tya
-							sta SCREENCOLOR+$0119,x
-							sta SCREENCOLOR+$0119+40,x
-							sta SCREENCOLOR+$0119+80,x
-							pla
-							dex
-							bpl -
+drawW3				lda #6
+							sta CHARDATA_W
+							lda #3
+							sta CHARDATA_H
+							lda #<datW3
+							sta LOB_DATA				
+							lda #>datW3					
+							sta HIB_DATA				
+							lda #<W3POS					
+							sta LOB_SCREEN			
+							lda #>W3POS					
+							sta HIB_SCREEN
+							jsr drawChars
+							lda #6
+							sta CHARDATA_W
+							lda #7
+							sta CHARDATA_H
+							lda #<datW3C
+							sta LOB_DATA				
+							lda #>datW3C										
+							sta HIB_DATA				
+							lda #<W2CPOS									
+							sta LOB_SCREEN			
+							lda #>W3CPOS											
+							sta HIB_SCREEN
+							jsr drawChars
 							rts
 
-drawN3				ldx #5		
-							lda #$a0
-							ldy #COLOR_DARKGREY
--							sta SCREEN+$011F,x
-							sta SCREEN+$011F+40,x
-							sta SCREEN+$011F+80,x
-							pha
-							tya
-							sta SCREENCOLOR+$011F,x
-							sta SCREENCOLOR+$011F+40,x
-							sta SCREENCOLOR+$011F+80,x
-							pla
-							dex
-							bpl -
+							
+drawN3				lda #6
+							sta CHARDATA_W
+							lda #3
+							sta CHARDATA_H
+							lda #<datN3
+							sta LOB_DATA				
+							lda #>datN3					
+							sta HIB_DATA				
+							lda #<N3POS					
+							sta LOB_SCREEN			
+							lda #>N3POS					
+							sta HIB_SCREEN
+							jsr drawChars
+							lda #6
+							sta CHARDATA_W
+							lda #7
+							sta CHARDATA_H
+							lda #<datN3C
+							sta LOB_DATA				
+							lda #>datN3C									
+							sta HIB_DATA				
+							lda #<N2CPOS								
+							sta LOB_SCREEN			
+							lda #>N3CPOS										
+							sta HIB_SCREEN
+							jsr drawChars
 							rts
 							
-drawE3				ldx #5		
-							lda #$a0
-							ldy #COLOR_DARKGREY
--							sta SCREEN+$0125,x
-							sta SCREEN+$0125+40,x
-							sta SCREEN+$0125+80,x
-							pha
-							tya
-							sta SCREENCOLOR+$0125,x
-							sta SCREENCOLOR+$0125+40,x
-							sta SCREENCOLOR+$0125+80,x
-							pla
-							dex
-							bpl -
-							rts
-							
-drawW2				lda #$a0
-							ldx #3
-							ldy #COLOR_LIGHTGREY
--							sta SCREEN+$00c9,x
-							sta SCREEN+$00c9+40,x
-							sta SCREEN+$00c9+80,x
-							sta SCREEN+$00c9+120,x
-							sta SCREEN+$00c9+160,x
-							sta SCREEN+$00c9+200,x
-							sta SCREEN+$00c9+240,x
-							pha
-							tya
-							sta SCREENCOLOR+$00c9,x
-							sta SCREENCOLOR+$00c9+40,x
-							sta SCREENCOLOR+$00c9+80,x
-							sta SCREENCOLOR+$00c9+120,x
-							sta SCREENCOLOR+$00c9+160,x
-							sta SCREENCOLOR+$00c9+200,x
-							sta SCREENCOLOR+$00c9+240,x
-							pla
-							dex
-							bpl -							
-							lda #$a0
-							ldx #1
-							ldy #COLOR_GREY
--							sta SCREEN+$00c9+4+40,x		;  []
-							sta SCREEN+$00c9+4+80,x
-							sta SCREEN+$00c9+4+120,x
-							sta SCREEN+$00c9+4+160,x
-							sta SCREEN+$00c9+4+200,x															
-							pha
-							tya
-							sta SCREENCOLOR+$00c9+4+40,x					
-							sta SCREENCOLOR+$00c9+4+80,x
-							sta SCREENCOLOR+$00c9+4+120,x
-							sta SCREENCOLOR+$00c9+4+160,x
-							sta SCREENCOLOR+$00c9+4+200,x
-							pla
-							dex
-							bpl -							
-							lda #$df
-							sta SCREEN+$00c9+4				; \
-							sta SCREEN+$00c9+4+41			;  \							
-							lda #$69							
-							sta SCREEN+$00c9+4+201    ; /
-							sta SCREEN+$00c9+4+240    ;/														
-							lda #COLOR_GREY
-							sta SCREENCOLOR+$00c9+4
-							sta SCREENCOLOR+$00c9+4+240							
+drawE3					lda #6
+							sta CHARDATA_W
+							lda #3
+							sta CHARDATA_H
+							lda #<datE3
+							sta LOB_DATA				
+							lda #>datE3					
+							sta HIB_DATA				
+							lda #<E3POS					
+							sta LOB_SCREEN			
+							lda #>E3POS					
+							sta HIB_SCREEN
+							jsr drawChars
+							lda #6
+							sta CHARDATA_W
+							lda #7
+							sta CHARDATA_H
+							lda #<datE3C
+							sta LOB_DATA				
+							lda #>datE3C								
+							sta HIB_DATA				
+							lda #<E2CPOS							
+							sta LOB_SCREEN			
+							lda #>E3CPOS								
+							sta HIB_SCREEN
+							jsr drawChars
 							rts	
 							
-drawE2				lda #$a0
-							ldx #3
-							ldy #COLOR_LIGHTGREY
-dW5L					sta SCREEN+$00d7,x
-							sta SCREEN+$00d7+40,x
-							sta SCREEN+$00d7+80,x
-							sta SCREEN+$00d7+120,x
-							sta SCREEN+$00d7+160,x
-							sta SCREEN+$00d7+200,x
-							sta SCREEN+$00d7+240,x
-							pha
-							tya
-							sta SCREENCOLOR+$00d7,x
-							sta SCREENCOLOR+$00d7+40,x
-							sta SCREENCOLOR+$00d7+80,x
-							sta SCREENCOLOR+$00d7+120,x
-							sta SCREENCOLOR+$00d7+160,x
-							sta SCREENCOLOR+$00d7+200,x
-							sta SCREENCOLOR+$00d7+240,x
-							pla
-							dex
-							bpl dW5L				
-							lda #$a0
-							ldx #1
-							ldy #COLOR_GREY
-dW5L2					sta SCREEN+$00d5+40,x								;  []
-							sta SCREEN+$00d5+80,x
-							sta SCREEN+$00d5+120,x
-							sta SCREEN+$00d5+160,x
-							sta SCREEN+$00d5+200,x																			
-							pha
-							tya
-							sta SCREENCOLOR+$00d5+40,x								
-							sta SCREENCOLOR+$00d5+80,x
-							sta SCREENCOLOR+$00d5+120,x
-							sta SCREENCOLOR+$00d5+160,x
-							sta SCREENCOLOR+$00d5+200,x
-							pla
-							dex
-							bpl dW5L2	
-							lda #$e9
-							sta SCREEN+$00d6						;  /
-							sta SCREEN+$00d6+39					; /					
-							lda #$5f							
-							sta SCREEN+$00d6+199    ; \
-							sta SCREEN+$00d6+240    ;  \					
-							lda #COLOR_GREY
-							sta SCREENCOLOR+$00d6+199
-							sta SCREENCOLOR+$00d6+240
-							sta SCREENCOLOR+$00d6
-							sta SCREENCOLOR+$00d6+39
-							rts									
-
-drawN2				lda #$a0
-							ldx #9
-							ldy #COLOR_LIGHTGREY
-dW6L					lda #$a0
-							cpx #0
-							bne .lastCol
-							lda #$e5
-.lastCol		  cpx #9
-							bne .midCol
-							lda #$e7
-.midCol				sta SCREEN+$00cd,x
-							sta SCREEN+$00cd+40,x
-							sta SCREEN+$00cd+80,x
-							sta SCREEN+$00cd+120,x
-							sta SCREEN+$00cd+160,x
-							sta SCREEN+$00cd+200,x
-							sta SCREEN+$00cd+240,x
-							tya
-							sta SCREENCOLOR+$00cd,x
-							sta SCREENCOLOR+$00cd+40,x
-							sta SCREENCOLOR+$00cd+80,x
-							sta SCREENCOLOR+$00cd+120,x
-							sta SCREENCOLOR+$00cd+160,x
-							sta SCREENCOLOR+$00cd+200,x
-							sta SCREENCOLOR+$00cd+240,x
-							dex
-							bpl dW6L
-							rts
+drawW2				lda #6
+							sta CHARDATA_W
+							lda #7
+							sta CHARDATA_H
+							lda #<datW2					; W1 chars
+							sta LOB_DATA				
+							lda #>datW2					
+							sta HIB_DATA				
+							lda #<W2POS					
+							sta LOB_SCREEN			
+							lda #>W2POS					
+							sta HIB_SCREEN
+							jsr drawChars
+							lda #6
+							sta CHARDATA_W
+							lda #7
+							sta CHARDATA_H
+							lda #<datW2C					; W1 color
+							sta LOB_DATA				
+							lda #>datW2C						
+							sta HIB_DATA				
+							lda #<W2CPOS						
+							sta LOB_SCREEN			
+							lda #>W2CPOS						
+							sta HIB_SCREEN
+							jsr drawChars
+							rts						
 							
-drawN1				lda #$a0
-							ldx #15
-							ldy #COLOR_WHITE
--							lda #$a0
-							cpx #0
-							bne +
-							lda #$e5
-+		  				cpx #15
-							bne +
-							lda #$e7
-+							sta SCREEN+$0052,x
-							sta SCREEN+$0052+40,x
-							sta SCREEN+$0052+80,x
-							sta SCREEN+$0052+120,x
-							sta SCREEN+$0052+160,x
-							sta SCREEN+$0052+200,x
-							sta SCREEN+$0052+240,x
-							sta SCREEN+$0052+280,x
-							sta SCREEN+$0052+320,x
-							sta SCREEN+$0052+360,x
-							sta SCREEN+$0052+400,x
-							sta SCREEN+$0052+440,x
-							sta SCREEN+$0052+480,x						
-							tya
-							sta SCREENCOLOR+$0052,x
-							sta SCREENCOLOR+$0052+40,x
-							sta SCREENCOLOR+$0052+80,x
-							sta SCREENCOLOR+$0052+120,x
-							sta SCREENCOLOR+$0052+160,x
-							sta SCREENCOLOR+$0052+200,x
-							sta SCREENCOLOR+$0052+240,x
-							sta SCREENCOLOR+$0052+280,x
-							sta SCREENCOLOR+$0052+320,x
-							sta SCREENCOLOR+$0052+360,x
-							sta SCREENCOLOR+$0052+400,x
-							sta SCREENCOLOR+$0052+440,x
-							sta SCREENCOLOR+$0052+480,x
-							dex
-							bpl -
-							rts							
+drawE2				lda #6
+							sta CHARDATA_W
+							lda #7
+							sta CHARDATA_H
+							lda #<datE2					; W1 chars
+							sta LOB_DATA				
+							lda #>datE2					
+							sta HIB_DATA				
+							lda #<E2POS					
+							sta LOB_SCREEN			
+							lda #>E2POS					
+							sta HIB_SCREEN
+							jsr drawChars
+							lda #6
+							sta CHARDATA_W
+							lda #7
+							sta CHARDATA_H
+							lda #<datE2C						; W1 color
+							sta LOB_DATA				
+							lda #>datE2C							
+							sta HIB_DATA				
+							lda #<E2CPOS							
+							sta LOB_SCREEN			
+							lda #>E2CPOS							
+							sta HIB_SCREEN
+							jsr drawChars
+							rts				
 
-drawW0				lda #$a0
-							sta SCREEN+$0051
-							sta SCREEN+$0051+40
-							sta SCREEN+$0051+80
-							sta SCREEN+$0051+120
-							sta SCREEN+$0051+160
-							sta SCREEN+$0051+200
-							sta SCREEN+$0051+240
-							sta SCREEN+$0051+280
-							sta SCREEN+$0051+320
-							sta SCREEN+$0051+360
-							sta SCREEN+$0051+400
-							sta SCREEN+$0051+440
-							sta SCREEN+$0051+480
-							lda #$df
-							sta SCREEN+$0029
-							lda #$69
-							sta SCREEN+$0259
-							lda #COLOR_WHITE
-							sta SCREENCOLOR+$0051
-							sta SCREENCOLOR+$0051+40
-							sta SCREENCOLOR+$0051+80
-							sta SCREENCOLOR+$0051+120
-							sta SCREENCOLOR+$0051+160
-							sta SCREENCOLOR+$0051+200
-							sta SCREENCOLOR+$0051+240
-							sta SCREENCOLOR+$0051+280
-							sta SCREENCOLOR+$0051+320
-							sta SCREENCOLOR+$0051+360
-							sta SCREENCOLOR+$0051+400
-							sta SCREENCOLOR+$0051+440
-							sta SCREENCOLOR+$0051+480
-							sta SCREENCOLOR+$0029
-							sta SCREENCOLOR+$0259
+drawN2				lda #10
+							sta CHARDATA_W
+							lda #7
+							sta CHARDATA_H
+							lda #<datN2		
+							sta LOB_DATA				
+							lda #>datN2					
+							sta HIB_DATA				
+							lda #<N2POS					
+							sta LOB_SCREEN			
+							lda #>N2POS					
+							sta HIB_SCREEN
+							jsr drawChars
+							lda #10
+							sta CHARDATA_W
+							lda #7
+							sta CHARDATA_H
+							lda #<datN2C		
+							sta LOB_DATA				
+							lda #>datN2C								
+							sta HIB_DATA				
+							lda #<N2CPOS								
+							sta LOB_SCREEN			
+							lda #>N2CPOS								
+							sta HIB_SCREEN
+							jsr drawChars
+							rts	
+							
+drawN1				lda #16
+							sta CHARDATA_W
+							lda #13
+							sta CHARDATA_H
+							lda #<datN1
+							sta LOB_DATA				
+							lda #>datN1					
+							sta HIB_DATA				
+							lda #<N1POS					
+							sta LOB_SCREEN			
+							lda #>N1POS					
+							sta HIB_SCREEN
+							jsr drawChars
+							lda #16
+							sta CHARDATA_W
+							lda #13
+							sta CHARDATA_H
+							lda #<datN1C
+							sta LOB_DATA				
+							lda #>datN1C						
+							sta HIB_DATA				
+							lda #<N1CPOS						
+							sta LOB_SCREEN			
+							lda #>N1CPOS						
+							sta HIB_SCREEN
+							jsr drawChars
+							rts					
+
+drawW0				lda #1
+							sta CHARDATA_W
+							lda #15
+							sta CHARDATA_H
+							lda #<datW0
+							sta LOB_DATA				
+							lda #>datW0					
+							sta HIB_DATA				
+							lda #<W0POS					
+							sta LOB_SCREEN			
+							lda #>W0POS					
+							sta HIB_SCREEN
+							jsr drawChars
+							lda #1
+							sta CHARDATA_W
+							lda #15
+							sta CHARDATA_H
+							lda #<datW0C			
+							sta LOB_DATA				
+							lda #>datW0C						
+							sta HIB_DATA				
+							lda #<W0CPOS						
+							sta LOB_SCREEN			
+							lda #>W0CPOS						
+							sta HIB_SCREEN
+							jsr drawChars
 							rts					
 							
-drawE0				lda #$a0
-							sta SCREEN+$0062
-							sta SCREEN+$0062+40
-							sta SCREEN+$0062+80
-							sta SCREEN+$0062+120
-							sta SCREEN+$0062+160
-							sta SCREEN+$0062+200
-							sta SCREEN+$0062+240
-							sta SCREEN+$0062+280
-							sta SCREEN+$0062+320
-							sta SCREEN+$0062+360
-							sta SCREEN+$0062+400
-							sta SCREEN+$0062+440
-							sta SCREEN+$0062+480
-							lda #$e9
-							sta SCREEN+$003a
-							lda #$5f
-							sta SCREEN+$026a
-							lda #COLOR_WHITE
-							sta SCREENCOLOR+$0062
-							sta SCREENCOLOR+$0062+40
-							sta SCREENCOLOR+$0062+80
-							sta SCREENCOLOR+$0062+120
-							sta SCREENCOLOR+$0062+160
-							sta SCREENCOLOR+$0062+200
-							sta SCREENCOLOR+$0062+240
-							sta SCREENCOLOR+$0062+280
-							sta SCREENCOLOR+$0062+320
-							sta SCREENCOLOR+$0062+360
-							sta SCREENCOLOR+$0062+400
-							sta SCREENCOLOR+$0062+440
-							sta SCREENCOLOR+$0062+480
-							sta SCREENCOLOR+$003a
-							sta SCREENCOLOR+$026a
+drawE0				lda #1
+							sta CHARDATA_W
+							lda #15
+							sta CHARDATA_H
+							lda #<datE0					
+							sta LOB_DATA				
+							lda #>datE0					
+							sta HIB_DATA				
+							lda #<E0POS					
+							sta LOB_SCREEN			
+							lda #>E0POS						
+							sta HIB_SCREEN
+							jsr drawChars
+							
+							lda #1
+							sta CHARDATA_W
+							lda #15
+							sta CHARDATA_H
+							lda #<datE0C					
+							sta LOB_DATA				
+							lda #>datE0C					
+							sta HIB_DATA				
+							lda #<E0CPOS
+							sta LOB_SCREEN			
+							lda #>E0CPOS
+							sta HIB_SCREEN
+							jsr drawChars
 							rts									
 
 drawW1				lda #4
@@ -1528,10 +1548,7 @@ value   		!byte 0,0,0,0
 result  		!byte 0,0,0,0,0,0,0,0,0,0
 resultstr		!text "00000000"			
 
-!zone externalSubRoutines							
-; we include external subroutes
-
-!zone data
+!zone mapData
 map						!byte W,W,W,W,W,W,S,W,W,W,W,W,W,W,W,W,W
 							!byte W,S,W,S,S,S,S,S,S,S,S,S,S,S,S,S,W
 							!byte W,S,W,S,S,S,S,S,S,S,W,W,S,W,S,S,W
@@ -1543,17 +1560,42 @@ map						!byte W,W,W,W,W,W,S,W,W,W,W,W,W,W,W,W,W
 							!byte W,S,S,S,S,S,S,S,S,S,S,S,S,S,S,S,W
 							!byte W,S,S,S,S,S,S,S,S,S,S,S,S,S,S,S,W
 							!byte W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W
-!zone uiData
-datUi				!media "assets\ui.charscreen",char,0,0,40,25
-datUiC			!media "assets\ui.charscreen",color,0,0,40,25
 						
-!zone canvasData
-datHorizon  !media "assets\dungeon0.charscreen",char,0,0,18,15											
-datHorizonC !media "assets\dungeon0.charscreen",color,0,0,18,15
-datW1				!media "assets\dungeon0.charscreen",char,30,12,4,13
-datW1C			!media "assets\dungeon0.charscreen",color,30,12,4,13
-datE1				!media "assets\dungeon0.charscreen",char,34,12,4,13
-datE1C			!media "assets\dungeon0.charscreen",color,34,12,4,13
+!zone uiData	; TODO we should shrink this down...2k is too much for the ui .. and we dont need the blanks
+datUi				!media "assets\ui.charscreen",char,0,0,40,25
+datUiC			!media "assets\ui.charscreen",color,0,0,40,25						
+
+!align 63,0
+spriteTiles
+ !media "assets\cursor.spriteproject",sprite,0,1
 
 *=$2000
 !media "assets\dungeon0.charscreen",CHARSET
+
+*=$2801
+!zone canvasData
+datHorizon  !media "assets\ui.charscreen",char,1,1,18,15																	
+datHorizonC !media "assets\ui.charscreen",color,1,1,18,15
+datW0				!media "assets\dungeon0.charscreen",char,38,10,1,15
+datW0C			!media "assets\dungeon0.charscreen",color,38,10,1,15
+datW1				!media "assets\dungeon0.charscreen",char,30,12,4,13
+datW1C			!media "assets\dungeon0.charscreen",color,30,12,4,13
+datW2				!media "assets\dungeon0.charscreen",char,0,18,6,7
+datW2C			!media "assets\dungeon0.charscreen",color,0,18,6,7
+datE1				!media "assets\dungeon0.charscreen",char,34,12,4,13
+datE1C			!media "assets\dungeon0.charscreen",color,34,12,4,13
+datE0				!media "assets\dungeon0.charscreen",char,39,10,1,15
+datE0C			!media "assets\dungeon0.charscreen",color,39,10,1,15
+datE2				!media "assets\dungeon0.charscreen",char,6,18,6,7
+datE2C			!media "assets\dungeon0.charscreen",color,6,18,6,7
+datN2				!media "assets\dungeon0.charscreen",char,12,18,10,7
+datN2C			!media "assets\dungeon0.charscreen",color,12,18,10,7
+datN1				!media "assets\dungeon0.charscreen",char,0,0,16,13
+datN1C			!media "assets\dungeon0.charscreen",color,0,0,16,13
+
+datW3				!media "assets\dungeon0.charscreen",char,0,15,6,3
+datW3C			!media "assets\dungeon0.charscreen",color,0,15,6,3
+datN3				!media "assets\dungeon0.charscreen",char,6,15,6,3
+datN3C			!media "assets\dungeon0.charscreen",color,6,15,6,3		
+datE3				!media "assets\dungeon0.charscreen",char,12,15,6,3
+datE3C				!media "assets\dungeon0.charscreen",color,12,15,6,3

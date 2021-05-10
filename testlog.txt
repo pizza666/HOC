@@ -1,0 +1,314 @@
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-found in main.asm at 194
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 194
+-found in main.asm at 12414
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 12414
+-found in main.asm at 13456
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 13456
+-found in main.asm at 13896
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 13896
+-found in main.asm at 13971
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 13971
+-found in main.asm at 14218
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 14218
+-found in main.asm at 14418
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 14418
+-found in main.asm at 14604
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 14604
+-found in main.asm at 14729
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 14729
+-found in main.asm at 14805
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 14805
+-found in main.asm at 15012
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 15012
+-found in main.asm at 15213
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 15213
+-found in main.asm at 15400
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 15400
+-found in main.asm at 15528
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 15528
+-found in main.asm at 15604
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 15604
+-found in main.asm at 15811
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 15811
+-found in main.asm at 16012
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 16012
+-found in main.asm at 16199
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 16199
+-found in main.asm at 16327
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 16327
+-found in main.asm at 16403
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 16403
+-found in main.asm at 16613
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 16613
+-found in main.asm at 16801
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 16801
+-found in main.asm at 17297
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 17297
+-found in main.asm at 17591
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 17591
+-found in main.asm at 17666
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 17666
+-found in main.asm at 17941
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 17941
+-found in main.asm at 18061
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 18061
+-found in main.asm at 18180
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 18180
+-found in main.asm at 18313
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 18313
+-found in main.asm at 18440
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 18440
+-found in main.asm at 18516
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 18516
+-found in main.asm at 18785
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 18785
+-found in main.asm at 18904
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 18904
+-found in main.asm at 19037
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 19037
+-found in main.asm at 19166
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 19166
+-found in main.asm at 19242
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 19242
+-found in main.asm at 19469
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 19469
+-found in main.asm at 19589
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 19589
+-found in main.asm at 19722
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 19722
+-found in main.asm at 19844
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 19844
+-found in main.asm at 20337
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 20337
+-found in main.asm at 20526
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 20526
+-found in main.asm at 20601
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 20601
+-found in main.asm at 21026
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 21026
+-found in main.asm at 21226
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 21226
+-found in main.asm at 21351
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 21351
+-found in main.asm at 21427
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 21427
+-found in main.asm at 21624
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 21624
+-found in main.asm at 21795
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 21795
+-found in main.asm at 21987
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 21987
+-found in main.asm at 22124
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 22124
+-found in main.asm at 22200
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 22200
+-found in main.asm at 22397
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 22397
+-found in main.asm at 22560
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 22560
+-found in main.asm at 22756
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 22756
+-found in main.asm at 22887
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 22887
+-found in main.asm at 22963
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 22963
+-found in main.asm at 23174
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 23174
+-found in main.asm at 23374
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 23374
+-found in main.asm at 23588
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 23588
+-found in main.asm at 24074
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 24074
+-found in main.asm at 24368
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 24368
+-found in main.asm at 24443
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 24443
+-found in main.asm at 24734
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 24734
+-found in main.asm at 24862
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 24862
+-found in main.asm at 24964
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 24964
+-found in main.asm at 25080
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 25080
+-found in main.asm at 25210
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 25210
+-found in main.asm at 25285
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 25285
+-found in main.asm at 25658
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 25658
+-found in main.asm at 25777
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 25777
+-found in main.asm at 25910
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 25910
+-found in main.asm at 26039
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 26039
+-found in main.asm at 26115
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 26115
+-found in main.asm at 26342
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 26342
+-found in main.asm at 26462
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 26462
+-found in main.asm at 26595
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 26595
+-found in main.asm at 26719
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 26719
+-found in main.asm at 28136
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 28136
+-found in main.asm at 28322
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 28322
+-found in main.asm at 28397
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 28397
+-found in main.asm at 28596
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 28596
+-found in main.asm at 28774
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 28774
+-found in main.asm at 28960
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 28960
+-found in main.asm at 29035
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 29035
+-found in main.asm at 29236
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 29236
+-found in main.asm at 29414
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 29414
+-found in main.asm at 29666
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 29666
+-found in main.asm at 29741
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 29741
+-found in main.asm at 29927
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 29927
+-found in main.asm at 30107
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 30107
+-found in main.asm at 30294
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 30294
+-found in main.asm at 30369
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 30369
+-found in main.asm at 30547
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 30547
+-found in main.asm at 31795
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 31795
+-found in main.asm at 32549
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 32549
+-found in main.asm at 32642
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 32642
+-found in main.asm at 32670
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 32670
+-found in main.asm at 45518
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 45518
+-found in main.asm at 45944
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 45944
+-found in main.asm at 46397
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 46397
+-found in main.asm at 46823
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 46823
+-found in main.asm at 47349
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 47349
+-found in main.asm at 47803
+FindNext LOB_DATA with ACTIVE_DOCUMENT
+-continue from main.asm at 47803
+-found in main.asm at 48302
