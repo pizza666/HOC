@@ -149,14 +149,12 @@ sprCursorLoad			lda spriteTiles,x
 
 !zone gameloop							
 gameloop									; start the game loop
-wait 							lda #80
-wait1							cmp $d012
-							bne wait1
-;							inc $d020
-;							ldx #255
-;wait2 				dex
-;							bne wait2
-;							dec $d020
+wait 					lda #20
+wait1					cmp VIC_RASTERROWPOS
+							bne wait1		
+							ldx #255
+wait2 				dex
+							bne wait2
 							; TODO refactor the key loop with lsr maybe								
 						
 !zone inputLoops
@@ -883,8 +881,8 @@ setDirection	lda pd						; sets the player icon based on the pd value
 
 						
 !zone canvas
-
-initCanvas		;jsr drawHorizon
+	; TODO we have to fix this...shortening needed, otherwise creatic artifacts
+initCanvas		jsr drawHorizon
 							lda #<fov
 							sta FOVLO
 							lda #>fov
@@ -895,7 +893,7 @@ initCanvas		;jsr drawHorizon
 							lda (FOVLO),y
 							cmp #W
 							bne +
-							;jsr drawW3
+							jsr drawW3
 +							inc FOVCOUNTER
 							ldy FOVCOUNTER									
 							lda (FOVLO),y
@@ -954,9 +952,9 @@ initCanvas		;jsr drawHorizon
 							ldy FOVCOUNTER									
 							lda (FOVLO),y
 							cmp #W
-							bne +
+							bne ++
 							jsr drawE0												
-+							rts
+++							rts
 
 !zone movePlayer
 movePlayerF		lda pd							; move player forward in pd (player direction) TODO maybe cycle optimization needed
