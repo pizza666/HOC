@@ -15,8 +15,8 @@ LOB_DATA				= $40		; data lobyte in ZP
 HIB_DATA				= $41   ; data hibyte in ZP
 LOB_SCREEN			= $fb 	; screen/color lobyte in ZP
 HIB_SCREEN			= $fc   ; screen/color hibyte in ZP
-CHARDATA_W			= $a7   ; data width in ZP
-CHARDATA_H			= $a8   ; data hight in ZP
+CHARDATA_W			= $03   ; data width in ZP
+CHARDATA_H			= $04   ; data hight in ZP
 
 ; TODO we could store px py pd here
 
@@ -29,8 +29,8 @@ UICPOS					= SCREENCOLOR
 ; map const
 MAPWIDTH				= 17
 MAPHIGHT				= 11
-W							  = $d6		;normal wall
-S								= $20		;normal floor/sky (space)
+W							  = $d6				;normal wall
+S								= $20				;normal floor/sky (space)
 MAPOFFSET				= $b5		
 MAPPOS 					= SCREEN+MAPOFFSET
 MAPCOLOR				= SCREENCOLOR+MAPOFFSET
@@ -50,33 +50,35 @@ COMPASSEAST			= SCREEN+$30e
 COMPASSSOUTH		= SCREEN+$3ab
 COMPASSWEST			= SCREEN+$308
 
+; canvas offsets
+CANVASPOS				= SCREEN+$29
+CANVASCPOS			= SCREENCOLOR+$29
+HORIZONPOS			= CANVASPOS
+HORIZONCPOS			= CANVASCPOS
+W0POS						= CANVASPOS
+W0CPOS					= CANVASCPOS
+
 ; wall offsets
-W0POS						= SCREEN+$29
-W0CPOS					= SCREENCOLOR+$29
-W1POS 					= SCREEN+$51
-W1CPOS 					= SCREENCOLOR+$51
-W2POS 					= SCREEN+$c9
-W2CPOS 					= SCREENCOLOR+$c9
-W3POS						= SCREEN+$119
-W3CPOS					= SCREENCOLOR+$119
-E0POS						= SCREEN+$3a
-E0CPOS					= SCREENCOLOR+$3a
-E1POS 					= SCREEN+$5f
-E1CPOS 					= SCREENCOLOR+$5f
-E2POS						= SCREEN+$d5
-E2CPOS				  = SCREENCOLOR+$d5
-E3POS 						= SCREEN+$125
-E3CPOS 					= SCREENCOLOR+$125
-N1POS						= SCREEN+$52
-N1CPOS					= SCREENCOLOR+$52
-N2POS						= SCREEN+$cd
-N2CPOS					= SCREENCOLOR+$cd
-N3POS						= SCREEN+$11f
-N3CPOS					= SCREENCOLOR+$11f
-
-
-HORIZONPOS			= SCREEN+$29
-HORIZONCPOS			= SCREENCOLOR+$29
+W1POS 					= CANVASPOS+$28
+W1CPOS 					= CANVASCPOS+$28
+W2POS 					= CANVASPOS+$a0
+W2CPOS 					= CANVASCPOS+$a0
+W3POS						= CANVASPOS+$f0
+W3CPOS					= CANVASCPOS+$f0
+E0POS						= CANVASPOS+$11
+E0CPOS					= CANVASCPOS+$11
+E1POS 					= CANVASPOS+$36
+E1CPOS 					= CANVASCPOS+$36
+E2POS						= CANVASPOS+$ac
+E2CPOS				  = CANVASCPOS+$ac
+E3POS 					= CANVASPOS+$fc
+E3CPOS 					= CANVASCPOS+$fc
+N1POS						= CANVASPOS+$29
+N1CPOS					= CANVASCPOS+$29
+N2POS						= CANVASPOS+$a4
+N2CPOS					= CANVASCPOS+$a4
+N3POS						= CANVASPOS+$f6
+N3CPOS					= CANVASCPOS+$f6
 
 ; sprites
 SPR_RAM			 		= 832
@@ -119,7 +121,7 @@ main
 									; sta $d023
 							
 									jsr drawUi
-									;jsr drawMap;
+									jsr drawMap;
 									jsr getFov
 									jsr initCanvas
 !zone initSprites
@@ -150,11 +152,13 @@ sprCursorLoad			lda spriteTiles,x
 !zone gameloop							
 gameloop									; start the game loop
 wait 					lda #20
-wait1					cmp VIC_RASTERROWPOS
-							bne wait1		
-							ldx #255
-wait2 				dex
+wait1					cmp $d012
+							bne wait1
+							inc $d020
+							ldx #0
+wait2 				inx
 							bne wait2
+							dec $d020
 							; TODO refactor the key loop with lsr maybe								
 						
 !zone inputLoops
@@ -210,9 +214,7 @@ key_A					lda KEYCOLS
 							and #4
 							bne key_4
 							jsr initCanvas
-							jsr movePlayerW
-							jsr drawMap
-							jsr drawPlayer						
+							jsr movePlayerW				
 key_4					lda KEYCOLS
 							and #8
 							bne key_S						
@@ -222,8 +224,6 @@ key_S					lda KEYCOLS
 							bne key_E							
 							jsr initCanvas
 							jsr movePlayerS
-							jsr drawMap
-							jsr drawPlayer
 key_E					lda KEYCOLS
 							and #64			
 							bne key_5
@@ -232,9 +232,7 @@ key_E					lda KEYCOLS
 							ror pd
 							jsr setDirection
 							jsr getFov
-							jsr initCanvas
-							jsr drawMap
-							jsr drawPlayer			
+							jsr initCanvas		
 key_5					lda #KEYROW_3			; # 3
 							sta KEYROWS
 							lda KEYCOLS
@@ -246,8 +244,6 @@ key_D					lda KEYCOLS
 							bne key_6
 							jsr initCanvas
 							jsr movePlayerE
-							jsr drawMap
-							jsr drawPlayer
 key_6					lda KEYCOLS
 							and #8
 							bne key_7					
@@ -402,32 +398,21 @@ drawMap				lda #MAPWIDTH
 ; fov -  directions are pd based
 
 !zone fovRoutines
-
-; these are our FOV registers			
-fov
-w3 !byte 0
-e3 !byte 0
-n3 !byte 0
-w2 !byte 0
-e2 !byte 0
-n2 !byte 0
-w1 !byte 0
-e1 !byte 0
-n1 !byte 0	
-w0 !byte 0
-e0 !byte 0
 						
 getFov				lda pd					; get direction and jsr the correct direction FOV routine
 							cmp #NORTH
 							bne +
 							jsr getFovNorth
-+							cmp #EAST
++							lda pd
+							cmp #EAST
 							bne +
 							jsr getFovEast
-+							cmp #SOUTH
++							lda pd
+							cmp #SOUTH
 							bne +
 							jsr getFovSouth
-+							cmp #WEST
++							lda pd
+							cmp #WEST
 							bne +
 							jsr getFovWest					
 +							rts
@@ -879,83 +864,73 @@ setDirection	lda pd						; sets the player icon based on the pd value
 							stx pIco
 +							rts
 
-						
+; these are our FOV registers			
+fov
+w3 !byte $20
+e3 !byte $20
+n3 !byte $20
+w2 !byte $20
+e2 !byte $20
+n2 !byte $20
+w1 !byte $20
+e1 !byte $20
+n1 !byte $20	
+w0 !byte $20
+e0 !byte $20
+
 !zone canvas
 	; TODO we have to fix this...shortening needed, otherwise creatic artifacts
 initCanvas		jsr drawHorizon
-							lda #<fov
-							sta FOVLO
-							lda #>fov
-							sta FOVHI
-							
-							ldy #0
-							sty FOVCOUNTER			
-							lda (FOVLO),y
+
++							lda w3
 							cmp #W
 							bne +
 							jsr drawW3
-+							inc FOVCOUNTER
-							ldy FOVCOUNTER									
-							lda (FOVLO),y
++							lda e3
 							cmp #W
 							bne +
 							jsr drawE3
-+							inc FOVCOUNTER
-							ldy FOVCOUNTER						
-							lda (FOVLO),y
++							lda n3
 							cmp #W
 							bne +
 							jsr drawN3
-+							inc FOVCOUNTER
-							ldy FOVCOUNTER									
-							lda (FOVLO),y
+							
++							lda w2
 							cmp #W
 							bne +
 							jsr drawW2
-+							inc FOVCOUNTER
-							ldy FOVCOUNTER								
-							lda (FOVLO),y
++							lda e2
 							cmp #W
 							bne +
 							jsr drawE2
-+							inc FOVCOUNTER
-							ldy FOVCOUNTER									
-							lda (FOVLO),y
++							lda n2
 							cmp #W
 							bne +
 							jsr drawN2
-+							inc FOVCOUNTER
-							ldy FOVCOUNTER									
-							lda (FOVLO),y
+							
++							lda w1
 							cmp #W
 							bne +
 							jsr drawW1
-+							inc FOVCOUNTER
-							ldy FOVCOUNTER									
-							lda (FOVLO),y
++							lda e1
 							cmp #W
 							bne +
 							jsr drawE1
-+							inc FOVCOUNTER
-							ldy FOVCOUNTER									
-							lda (FOVLO),y
++							lda n1
 							cmp #W
 							bne +
 							jsr drawN1
-+							inc FOVCOUNTER
-							ldy FOVCOUNTER									
-							lda (FOVLO),y
+							
++							lda w0
 							cmp #W
 							bne +
 							jsr drawW0
-+							inc FOVCOUNTER
-							ldy FOVCOUNTER									
-							lda (FOVLO),y
++							lda e0
 							cmp #W
-							bne ++
+							bne +
 							jsr drawE0												
-++							rts
-
++							rts
+	
 !zone movePlayer
 movePlayerF		lda pd							; move player forward in pd (player direction) TODO maybe cycle optimization needed
 							cmp #NORTH
@@ -1596,4 +1571,4 @@ datW3C			!media "assets\dungeon0.charscreen",color,0,15,6,3
 datN3				!media "assets\dungeon0.charscreen",char,6,15,6,3
 datN3C			!media "assets\dungeon0.charscreen",color,6,15,6,3		
 datE3				!media "assets\dungeon0.charscreen",char,12,15,6,3
-datE3C				!media "assets\dungeon0.charscreen",color,12,15,6,3
+datE3C			!media "assets\dungeon0.charscreen",color,12,15,6,3
