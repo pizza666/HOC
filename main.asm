@@ -45,14 +45,13 @@ COMPASSSOUTH		= SCREEN+$3ab
 COMPASSWEST			= SCREEN+$308
 
 ; canvas offsets
-CANVASPOS				= SCREEN+$29
-CANVASCPOS			= SCREENCOLOR+$29
+CANVASPOS				= SCREEN
+CANVASCPOS			= SCREENCOLOR
 HORIZONPOS			= CANVASPOS
 HORIZONCPOS			= CANVASCPOS
+; walls
 W0POS						= CANVASPOS
 W0CPOS					= CANVASCPOS
-
-; wall offsets
 W1POS 					= CANVASPOS+$28
 W1CPOS 					= CANVASCPOS+$28
 W2POS 					= CANVASPOS+$a0
@@ -73,6 +72,8 @@ N2POS						= CANVASPOS+$a4
 N2CPOS					= CANVASCPOS+$a4
 N3POS						= CANVASPOS+$f6
 N3CPOS					= CANVASCPOS+$f6
+BACKGROUNDCOLOR		= COLOR_DARKGREY
+BORDERCOLOR				= COLOR_BLACK
 
 ; sprites
 SPR_RAM			 		= 832
@@ -95,28 +96,27 @@ KEYROW_6				= %11011111 ; (223/$df)     |   ,   ($2c)|   @   ($00)|   :   ($3a)|
 KEYROW_7				= %10111111 ; (191/$bf)     |   /   ($2f)|   ^   ($1e)|   =   ($3d)|RGHT-SH($  )|  HOME ($  )|   ;   ($3b)|   *   ($2a)|   £   ($1c)|
 KEYROW_8				= %01111111 ; (127/$7f)     | STOP  ($  )|   q   ($11)|COMMODR($  )| SPACE ($20)|   2   ($32)|CONTROL($  )|  <-   ($1f)|   1   ($31)|
 														;+----+---------+------------+------------+------------+------------+------------+------------+------------+------------+
-
 main
 !zone initScreen
-									lda #COLOR_BLACK
+									lda #BORDERCOLOR
 									sta VIC_BORDERCOLOR
-									lda #0
+									lda #BACKGROUNDCOLOR
 									sta VIC_BACKGROUNDCOLOR
 									jsr clearScreen
 
 									lda #$18									; use charset at $2000
 									sta VIC_MEMSETUP	
 									; activate multicolor
-									; lda #16
-									; ora $d016
-									; sta $d016
-									; lda #12
-						  		; sta $d022
-									; lda #15
-									; sta $d023
+									 lda #16
+									 ora $d016
+									 sta $d016
+									 lda #12
+						  		 sta $d022
+									 lda #15
+									 sta $d023
 							
 									jsr drawUi
-									jsr drawMap;
+									;jsr drawMap;
 									jsr getFov
 									jsr initCanvas
 !zone initSprites
@@ -149,11 +149,11 @@ gameloop									; start the game loop
 wait 					lda #43
 wait1					cmp $d012
 							bne wait1
-							inc $d020
+							;inc $d020
 							ldx #0
 wait2 				inx
 							bne wait2
-							dec $d020
+							;dec $d020
 							; TODO refactor the key loop with lsr maybe								
 						
 !zone inputLoops
@@ -1157,7 +1157,7 @@ drawE3				lda #6
 							sta LOB_DATA				
 							lda #>datE3C								
 							sta HIB_DATA				
-							lda #<E2CPOS							
+							lda #<E3CPOS								
 							sta LOB_SCREEN			
 							lda #>E3CPOS								
 							sta HIB_SCREEN
@@ -1523,40 +1523,39 @@ map						!byte W,W,W,W,W,W,S,W,W,W,W,W,W,W,W,W,W
 							!byte W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W
 						
 !zone uiData	; TODO we should shrink this down...2k is too much for the ui .. and we dont need the blanks
-datUi				!media "assets\ui.charscreen",char,0,0,40,25
-datUiC			!media "assets\ui.charscreen",color,0,0,40,25						
+datUi				!media "assets\uiMC.charscreen",char,0,0,40,25
+datUiC			!media "assets\uiMC.charscreen",color,0,0,40,25						
 
 !align 63,0
 spriteTiles
  !media "assets\cursor.spriteproject",sprite,0,1
 
 *=$2000
-!media "assets\dungeon0.charscreen",CHARSET
+!media "assets\dungeon0mc.charscreen",CHARSET
 
 *=$3000
 !zone canvasData
-datHorizon  !media "assets\ui.charscreen",char,1,1,18,15																	
-datHorizonC !media "assets\ui.charscreen",color,1,1,18,15
-datW0				!media "assets\dungeon0.charscreen",char,38,10,1,15
-datW0C			!media "assets\dungeon0.charscreen",color,38,10,1,15
-datW1				!media "assets\dungeon0.charscreen",char,30,12,4,13
-datW1C			!media "assets\dungeon0.charscreen",color,30,12,4,13
-datW2				!media "assets\dungeon0.charscreen",char,0,18,6,7
-datW2C			!media "assets\dungeon0.charscreen",color,0,18,6,7
-datE1				!media "assets\dungeon0.charscreen",char,34,12,4,13
-datE1C			!media "assets\dungeon0.charscreen",color,34,12,4,13
-datE0				!media "assets\dungeon0.charscreen",char,39,10,1,15
-datE0C			!media "assets\dungeon0.charscreen",color,39,10,1,15
-datE2				!media "assets\dungeon0.charscreen",char,6,18,6,7
-datE2C			!media "assets\dungeon0.charscreen",color,6,18,6,7
-datN2				!media "assets\dungeon0.charscreen",char,12,18,10,7
-datN2C			!media "assets\dungeon0.charscreen",color,12,18,10,7
-datN1				!media "assets\dungeon0.charscreen",char,0,0,16,13
-datN1C			!media "assets\dungeon0.charscreen",color,0,0,16,13
-
-datW3				!media "assets\dungeon0.charscreen",char,0,15,6,3
-datW3C			!media "assets\dungeon0.charscreen",color,0,15,6,3
-datN3				!media "assets\dungeon0.charscreen",char,6,15,6,3
-datN3C			!media "assets\dungeon0.charscreen",color,6,15,6,3		
-datE3				!media "assets\dungeon0.charscreen",char,12,15,6,3
-datE3C			!media "assets\dungeon0.charscreen",color,12,15,6,3
+datHorizon  !media "assets\uiMc.charscreen",char,0,0,18,15																				
+datHorizonC !media "assets\uiMc.charscreen",color,0,0,18,15
+datW0				!media "assets\dungeon0mc.charscreen",char,38,10,1,15
+datW0C			!media "assets\dungeon0mc.charscreen",color,38,10,1,15
+datW1				!media "assets\dungeon0mc.charscreen",char,30,12,4,13
+datW1C			!media "assets\dungeon0mc.charscreen",color,30,12,4,13
+datW2				!media "assets\dungeon0mc.charscreen",char,0,18,6,7
+datW2C			!media "assets\dungeon0mc.charscreen",color,0,18,6,7
+datE1				!media "assets\dungeon0mc.charscreen",char,34,12,4,13
+datE1C			!media "assets\dungeon0mc.charscreen",color,34,12,4,13
+datE0				!media "assets\dungeon0mc.charscreen",char,39,10,1,15
+datE0C			!media "assets\dungeon0mc.charscreen",color,39,10,1,15
+datE2				!media "assets\dungeon0mc.charscreen",char,6,18,6,7
+datE2C			!media "assets\dungeon0mc.charscreen",color,6,18,6,7
+datN2				!media "assets\dungeon0mc.charscreen",char,12,18,10,7
+datN2C			!media "assets\dungeon0mc.charscreen",color,12,18,10,7
+datN1				!media "assets\dungeon0mc.charscreen",char,0,0,16,13
+datN1C			!media "assets\dungeon0mc.charscreen",color,0,0,16,13
+datW3				!media "assets\dungeon0mc.charscreen",char,0,15,6,3
+datW3C			!media "assets\dungeon0mc.charscreen",color,0,15,6,3
+datN3				!media "assets\dungeon0mc.charscreen",char,6,15,6,3
+datN3C			!media "assets\dungeon0mc.charscreen",color,6,15,6,3																			
+datE3				!media "assets\dungeon0mc.charscreen",char,12,15,6,3
+datE3C			!media "assets\dungeon0mc.charscreen",color,12,15,6,3
