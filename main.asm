@@ -4,19 +4,13 @@
 !basic main
 
 !zone constants
-; fov vector
-FOVCOUNTER			= $02
-FOVLO						= $05
-FOVHI						= $06
-
-
 ; Zero Pages
-LOB_DATA				= $40		; data lobyte in ZP
-HIB_DATA				= $41   ; data hibyte in ZP
-LOB_SCREEN			= $fb 	; screen/color lobyte in ZP
-HIB_SCREEN			= $fc   ; screen/color hibyte in ZP
-CHARDATA_W			= $03   ; data width in ZP
-CHARDATA_H			= $04   ; data hight in ZP
+LOB_DATA				= $92		; data lobyte in ZP
+HIB_DATA				= $93   ; data hibyte in ZP
+LOB_SCREEN			= $94 		; screen/color lobyte in ZP
+HIB_SCREEN			= $95   ; screen/color hibyte in ZP
+CHARDATA_W			= $96   ; data width in ZP
+CHARDATA_H			= $fb   ; data hight in ZP
 
 ; TODO we could store px py pd here
 
@@ -106,6 +100,7 @@ main
 !zone initScreen
 									lda #COLOR_BLACK
 									sta VIC_BORDERCOLOR
+									lda #0
 									sta VIC_BACKGROUNDCOLOR
 									jsr clearScreen
 
@@ -115,9 +110,9 @@ main
 									; lda #16
 									; ora $d016
 									; sta $d016
-									; lda #09
+									; lda #12
 						  		; sta $d022
-									; lda #06
+									; lda #15
 									; sta $d023
 							
 									jsr drawUi
@@ -151,7 +146,7 @@ sprCursorLoad			lda spriteTiles,x
 
 !zone gameloop							
 gameloop									; start the game loop
-wait 					lda #20
+wait 					lda #43
 wait1					cmp $d012
 							bne wait1
 							inc $d020
@@ -176,14 +171,10 @@ movesprite		ldx dx
 key_1					sta KEYROWS
 							lda KEYCOLS
 							and #1
-							bne key_2		
-							lda #$31
-							sta SCREEN+$65																										
+							bne key_2																												
 key_2					lda KEYCOLS
 							and #8
 							bne key_Q					
-							lda #$32
-							sta SCREEN+$65
 key_Q					lda KEYCOLS
 							and #64			
 							bne key_3
@@ -199,9 +190,6 @@ key_3					lda #KEYROW_2				; #2
 							lda KEYCOLS
 							and #1
 							bne key_W						
-							lda #$33
-							sta SCREEN+$65
-							jsr initCanvas	
 key_W					lda KEYCOLS
 							and #2
 							bne key_A
@@ -277,7 +265,7 @@ key_0					lda KEYCOLS
 							sta py
 							jsr drawMap
 							jsr drawPlayer
-+							
++							jsr printdebugs
 gameloopEnd		jmp gameloop
 							
 						
@@ -333,8 +321,8 @@ printdebugs		jsr clearValues
 
 ceilingColor	!byte	COLOR_DARKGREY
 floorColor		!byte COLOR_BLUE
-px						!byte 4,0,0,0				; player x coordinate
-py						!byte 7,0,0,0				; player y coordinate
+px						!byte 12,0,0,0				; player x coordinate
+py						!byte 9,0,0,0				; player y coordinate
 pd						!byte %10001000			; player direction
 pIco					!byte	ICON_NORTH		; which icon to use for the player on map
 
@@ -1106,13 +1094,13 @@ drawW3				lda #6
 							jsr drawChars
 							lda #6
 							sta CHARDATA_W
-							lda #7
+							lda #3
 							sta CHARDATA_H
 							lda #<datW3C
 							sta LOB_DATA				
 							lda #>datW3C										
 							sta HIB_DATA				
-							lda #<W2CPOS									
+							lda #<W3CPOS										
 							sta LOB_SCREEN			
 							lda #>W3CPOS											
 							sta HIB_SCREEN
@@ -1135,20 +1123,20 @@ drawN3				lda #6
 							jsr drawChars
 							lda #6
 							sta CHARDATA_W
-							lda #7
+							lda #3
 							sta CHARDATA_H
 							lda #<datN3C
 							sta LOB_DATA				
 							lda #>datN3C									
 							sta HIB_DATA				
-							lda #<N2CPOS								
+							lda #<N3CPOS									
 							sta LOB_SCREEN			
 							lda #>N3CPOS										
 							sta HIB_SCREEN
 							jsr drawChars
 							rts
 							
-drawE3					lda #6
+drawE3				lda #6
 							sta CHARDATA_W
 							lda #3
 							sta CHARDATA_H
@@ -1163,7 +1151,7 @@ drawE3					lda #6
 							jsr drawChars
 							lda #6
 							sta CHARDATA_W
-							lda #7
+							lda #3
 							sta CHARDATA_H
 							lda #<datE3C
 							sta LOB_DATA				
@@ -1527,7 +1515,7 @@ map						!byte W,W,W,W,W,W,S,W,W,W,W,W,W,W,W,W,W
 							!byte W,S,W,S,S,S,S,S,S,S,W,W,S,W,S,S,W
 							!byte W,S,S,S,S,S,S,S,S,S,S,S,S,S,S,S,W
 							!byte W,S,S,W,S,W,W,W,S,S,W,W,S,W,S,S,W
-							!byte W,S,S,S,S,W,S,W,S,S,W,W,S,W,S,S,W
+							!byte W,S,S,S,S,W,S,W,S,S,S,S,S,S,S,S,W
 							!byte W,S,S,S,S,W,S,W,S,S,S,S,S,S,S,S,W
 							!byte W,S,S,S,S,S,S,S,S,S,S,S,S,S,S,S,W
 							!byte W,S,S,S,S,S,S,S,S,S,S,S,S,S,S,S,W
@@ -1545,7 +1533,7 @@ spriteTiles
 *=$2000
 !media "assets\dungeon0.charscreen",CHARSET
 
-*=$2801
+*=$3000
 !zone canvasData
 datHorizon  !media "assets\ui.charscreen",char,1,1,18,15																	
 datHorizonC !media "assets\ui.charscreen",color,1,1,18,15
