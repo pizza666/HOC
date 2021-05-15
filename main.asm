@@ -21,28 +21,28 @@ UIPOS						= SCREEN
 UICPOS					= SCREENCOLOR
 
 ; map const
-MAPWIDTH				= 17
-MAPHIGHT				= 11
-W							  = $d6				;normal wall
-S								= $20				;normal floor/sky (space)
-MAPOFFSET				= $b5		
+MAPWIDTH				= 20
+MAPHIGHT				= 12
+W							  = $ec				;normal wall
+S								= $0a				;normal floor/sky (space)
+MAPOFFSET				= $8b		
 MAPPOS 					= SCREEN+MAPOFFSET
 MAPCOLOR				= SCREENCOLOR+MAPOFFSET
 NORTH						= %10001000 ; $88 - 136
 EAST						= %01000100 ; $44 - 68
 SOUTH						= %00100010 ; $22 - 34
 WEST						= %00010001 ; $11 - 17
-ICON_NORTH			= 28
-ICON_EAST				= 29
-ICON_SOUTH			= 30
-ICON_WEST				= 31
+ICON_NORTH			= $f0
+ICON_EAST				= $f3
+ICON_SOUTH			= $f1
+ICON_WEST				= $f2
 
 ; compass
 COMPASSPOS			= SCREEN+$2e2
 COMPASSNORTH		= SCREEN+$293
-COMPASSEAST			= SCREEN+$30e
-COMPASSSOUTH		= SCREEN+$3ab
-COMPASSWEST			= SCREEN+$308
+COMPASSEAST			= SCREEN+$30f
+COMPASSSOUTH		= SCREEN+$383
+COMPASSWEST			= SCREEN+$307
 
 ; canvas offsets
 CANVASPOS				= SCREEN
@@ -78,6 +78,9 @@ BORDERCOLOR				= COLOR_BLACK
 ; sprites
 SPR_RAM			 		= 832
 SPR_CURSOR			= 13
+
+; debug
+DEBUGPOS				= SCREEN+$3c0
 
 ; keyboard
 KEYROWS 				=	$dc00			; peek
@@ -135,7 +138,7 @@ sprCursorLoad			lda spriteTiles,x
  									bne sprCursorLoad									
  									lda #6
  									sta VIC_SPRITE0COLOR
- 									lda #12
+ 									lda #1
  									sta VIC_SPRITEMULTICOLOR0
  									lda #14
  									sta VIC_SPRITEMULTICOLOR1			
@@ -271,45 +274,46 @@ gameloopEnd		jmp gameloop
 						
 !zone debug							
 printdebugs		jsr clearValues						
-							lda py					   ; player y debug
-							sta value
-							jsr printdec
-							lda resultstr								
-							sta SCREEN+$6f
-							lda resultstr+1
-							sta SCREEN+$6e
-							lda resultstr+2
-							sta SCREEN+$6d
-							lda #$19
-							sta SCREEN+$6c
-							
-							jsr clearValues
 							
 							lda px						; player x debug
 							sta value
 							jsr printdec
 							lda resultstr								
-							sta SCREEN+$6a
+							sta DEBUGPOS+3
 							lda resultstr+1
-							sta SCREEN+$69
+							sta DEBUGPOS+2
 							lda resultstr+2
-							sta SCREEN+$68
-							lda #$18
-							sta SCREEN+$67
+							sta DEBUGPOS+1
+							lda #S_X
+							sta DEBUGPOS
 						
 							jsr clearValues
-							
-							lda pd						; player x debug
+
+							lda py					  ; player y debug
 							sta value
 							jsr printdec
 							lda resultstr								
-							sta SCREEN+$74
+							sta DEBUGPOS+8
 							lda resultstr+1
-							sta SCREEN+$73
+							sta DEBUGPOS+7
 							lda resultstr+2
-							sta SCREEN+$72
-							lda #$04
-							sta SCREEN+$71
+							sta DEBUGPOS+6
+							lda #S_Y
+							sta DEBUGPOS+5
+							
+							jsr clearValues						
+							
+							lda pd						; player direction debug
+							sta value
+							jsr printdec
+							lda resultstr								
+							sta DEBUGPOS+13
+							lda resultstr+1
+							sta DEBUGPOS+12
+							lda resultstr+2
+							sta DEBUGPOS+11
+							lda #S_D
+							sta DEBUGPOS+10
 							rts	
 														
 							
@@ -1471,10 +1475,12 @@ printdec			jsr hex2dec
         			ldx #9
 l1      			lda result,x
         			bne l2
-        			dex             ; skip leading zeros
+        			;dex             ; skip leading zeros
         			bne l1
 l2      			lda result,x
-        			ora #$30							
+        			;ora #$e2
+							clc
+							adc #$e2							
 							; insert other print routine here
         			sta resultstr,x										
         			dex
@@ -1507,24 +1513,25 @@ skip       	  rol value
 
 value   		!byte 0,0,0,0
 result  		!byte 0,0,0,0,0,0,0,0,0,0
-resultstr		!text "00000000"			
+resultstr		!byte S_0,S_0,S_0,S_0,S_0,S_0,S_0,S_0			
 
 !zone mapData
-map						!byte W,W,W,W,W,W,S,W,W,W,W,W,W,W,W,W,W
-							!byte W,S,W,S,S,S,S,S,S,S,S,S,S,S,S,S,W
-							!byte W,S,W,S,S,S,S,S,S,S,W,W,S,W,S,S,W
-							!byte W,S,S,S,S,S,S,S,S,S,S,S,S,S,S,S,W
-							!byte W,S,S,W,S,W,W,W,S,S,W,W,S,W,S,S,W
-							!byte W,S,S,S,S,W,S,W,S,S,S,S,S,S,S,S,W
-							!byte W,S,S,S,S,W,S,W,S,S,S,S,S,S,S,S,W
-							!byte W,S,S,S,S,S,S,S,S,S,S,S,S,S,S,S,W
-							!byte W,S,S,S,S,S,S,S,S,S,S,S,S,S,S,S,W
-							!byte W,S,S,S,S,S,S,S,S,S,S,S,S,S,S,S,W
-							!byte W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W
+map						!byte W,W,W,W,W,W,S,W,W,W,W,W,W,W,W,W,W,W,W,W
+							!byte W,S,W,S,S,S,S,S,S,S,S,S,S,S,S,S,W,W,W,W
+							!byte W,S,W,S,S,S,S,S,S,S,W,W,S,W,S,S,W,W,W,W
+							!byte W,S,S,S,S,S,S,S,S,S,S,S,S,S,S,S,W,W,W,W
+							!byte W,S,S,W,S,W,W,W,S,S,W,W,S,W,S,S,W,W,W,W
+							!byte W,S,S,S,S,W,S,W,S,S,S,S,S,S,S,S,W,W,W,W
+							!byte W,S,S,S,S,W,S,W,S,S,S,S,S,S,S,S,W,W,W,W
+							!byte W,S,S,S,S,S,S,S,S,S,S,S,S,S,S,S,W,W,W,W
+							!byte W,S,S,S,S,S,S,S,S,S,S,S,S,S,S,S,W,W,W,W
+							!byte W,S,S,S,S,S,S,S,S,S,S,S,S,S,S,S,W,W,W,W
+							!byte W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W
+							!byte W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W
 						
 !zone uiData	; TODO we should shrink this down...2k is too much for the ui .. and we dont need the blanks
-datUi				!media "assets\uiMC.charscreen",char,0,0,40,25
-datUiC			!media "assets\uiMC.charscreen",color,0,0,40,25						
+datUi				!media "assets\uiMc.charscreen",char,0,0,40,25
+datUiC			!media "assets\uiMc.charscreen",color,0,0,40,25											
 
 !align 63,0
 spriteTiles
@@ -1535,7 +1542,7 @@ spriteTiles
 
 *=$3000
 !zone canvasData
-datHorizon  !media "assets\uiMc.charscreen",char,0,0,18,15																				
+datHorizon  !media "assets\uiMc.charscreen",char,0,0,18,15																								
 datHorizonC !media "assets\uiMc.charscreen",color,0,0,18,15
 datW0				!media "assets\dungeon0mc.charscreen",char,38,10,1,15
 datW0C			!media "assets\dungeon0mc.charscreen",color,38,10,1,15
@@ -1549,8 +1556,8 @@ datE0				!media "assets\dungeon0mc.charscreen",char,39,10,1,15
 datE0C			!media "assets\dungeon0mc.charscreen",color,39,10,1,15
 datE2				!media "assets\dungeon0mc.charscreen",char,6,18,6,7
 datE2C			!media "assets\dungeon0mc.charscreen",color,6,18,6,7
-datN2				!media "assets\dungeon0mc.charscreen",char,12,18,10,7
-datN2C			!media "assets\dungeon0mc.charscreen",color,12,18,10,7
+datN2				!media "assets\dungeon0mc.charscreen",char,8,18,10,7
+datN2C			!media "assets\dungeon0mc.charscreen",color,8,18,10,7
 datN1				!media "assets\dungeon0mc.charscreen",char,0,0,16,13
 datN1C			!media "assets\dungeon0mc.charscreen",color,0,0,16,13
 datW3				!media "assets\dungeon0mc.charscreen",char,0,15,6,3
