@@ -263,9 +263,10 @@ key_0					lda KEYCOLS
 							and #8
 					    bne +																
 							jsr initCanvas
-							lda #2
-							sta px
-							sta py
+							jsr setDirection
+							jsr getFov
+							jsr drawHorizon
+							jsr initCanvas
 							jsr drawMap
 							jsr drawPlayer
 +							jsr printdebugs
@@ -1110,7 +1111,6 @@ drawW3				lda #6
 							sta HIB_SCREEN
 							jsr drawChars
 							rts
-
 							
 drawN3				lda #6
 							sta CHARDATA_W
