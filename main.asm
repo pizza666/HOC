@@ -1513,7 +1513,7 @@ skip       	  rol value
 
 value   		!byte 0,0,0,0
 result  		!byte 0,0,0,0,0,0,0,0,0,0
-resultstr		!byte S_0,S_0,S_0,S_0,S_0,S_0,S_0,S_0			
+resultstr		!byte S_0,S_0,S_0,S_0,S_0,S_0,S_0,S_0,S_0,S_0			
 
 !zone mapData
 map						!byte W,W,W,W,W,W,S,W,W,W,W,W,W,W,W,W,W,W,W,W
