@@ -20,22 +20,28 @@ UIHIGHT					= 25
 UIPOS						= SCREEN
 UICPOS					= SCREENCOLOR
 
+; left menu
+LMOFFSET				= $8b
+LEFTMENUPOS			= SCREEN+LMOFFSET
+LEFTMENUCOLOR		= SCREENCOLOR+LMOFFSET
+
+
 ; map const
 MAPWIDTH				= 20
 MAPHIGHT				= 12
-W							  = $ec				;normal wall
-S								= $0a				;normal floor/sky (space)
-MAPOFFSET				= $8b		
-MAPPOS 					= SCREEN+MAPOFFSET
-MAPCOLOR				= SCREENCOLOR+MAPOFFSET
+W							  = $af				;normal wall
+S								= $09				;normal floor/sky (space)		
+MAPPOS 					= LEFTMENUPOS
+MAPCOLOR				= LEFTMENUCOLOR
 NORTH						= %10001000 ; $88 - 136
 EAST						= %01000100 ; $44 - 68
 SOUTH						= %00100010 ; $22 - 34
 WEST						= %00010001 ; $11 - 17
-ICON_NORTH			= $f0
-ICON_EAST				= $f3
-ICON_SOUTH			= $f1
-ICON_WEST				= $f2
+
+ICON_NORTH			= $ab
+ICON_EAST				= ICON_NORTH+1
+ICON_SOUTH			= ICON_NORTH+2
+ICON_WEST				= ICON_NORTH+3
 
 ; compass
 COMPASSPOS			= SCREEN+$2e2
@@ -72,7 +78,8 @@ N2POS						= CANVASPOS+$a4
 N2CPOS					= CANVASCPOS+$a4
 N3POS						= CANVASPOS+$f6
 N3CPOS					= CANVASCPOS+$f6
-BACKGROUNDCOLOR		= COLOR_DARKGREY
+BACKGROUNDCOLOR				= COLOR_DARKGREY
+;BACKGROUNDCOLOR		= COLOR_BLACK
 BORDERCOLOR				= COLOR_BLACK
 
 ; sprites
@@ -196,11 +203,13 @@ key_3					lda #KEYROW_2				; #2
 key_W					lda KEYCOLS
 							and #2
 							bne key_A
+							jsr playSfx
 							jsr movePlayerF
 							jsr setDirection
 							jsr getFov
 							jsr drawHorizon
-							jsr initCanvas					
+							jsr initCanvas
+							jsr soundOff			
 key_A					lda KEYCOLS
 							and #4
 							bne key_4
@@ -324,8 +333,6 @@ printdebugs		jsr clearValues
 ; #  variables go here
 ; ######################################
 
-ceilingColor	!byte	COLOR_DARKGREY
-floorColor		!byte COLOR_BLUE
 px						!byte 12,0,0,0				; player x coordinate
 py						!byte 9,0,0,0				; player y coordinate
 pd						!byte %10001000			; player direction
@@ -937,7 +944,7 @@ movePlayerF		lda pd							; move player forward in pd (player direction) TODO ma
 							jsr movePlayerS
 +							cmp #WEST
 							bne +
-							jsr movePlayerW
+							jsr movePlayerW						
 +							rts
 
 							
@@ -1080,8 +1087,7 @@ drawChars			ldx #0							; x = 0 for our row number
 							inx
 							cpx CHARDATA_H
 							bne --
-							rts
-		
+							rts		
 
 !zone drawCanvas						; single routines for drawing walls, floor and ceiling
 drawW3				lda #6
@@ -1172,7 +1178,7 @@ drawW2				lda #6
 							sta CHARDATA_W
 							lda #7
 							sta CHARDATA_H
-							lda #<datW2					; W1 chars
+							lda #<datW2
 							sta LOB_DATA				
 							lda #>datW2					
 							sta HIB_DATA				
@@ -1185,7 +1191,7 @@ drawW2				lda #6
 							sta CHARDATA_W
 							lda #7
 							sta CHARDATA_H
-							lda #<datW2C					; W1 color
+							lda #<datW2C
 							sta LOB_DATA				
 							lda #>datW2C						
 							sta HIB_DATA				
@@ -1200,7 +1206,7 @@ drawE2				lda #6
 							sta CHARDATA_W
 							lda #7
 							sta CHARDATA_H
-							lda #<datE2					; W1 chars
+							lda #<datE2
 							sta LOB_DATA				
 							lda #>datE2					
 							sta HIB_DATA				
@@ -1213,7 +1219,7 @@ drawE2				lda #6
 							sta CHARDATA_W
 							lda #7
 							sta CHARDATA_H
-							lda #<datE2C						; W1 color
+							lda #<datE2C
 							sta LOB_DATA				
 							lda #>datE2C							
 							sta HIB_DATA				
@@ -1341,7 +1347,7 @@ drawW1				lda #4
 							sta CHARDATA_W
 							lda #13
 							sta CHARDATA_H
-							lda #<datW1					; W1 chars
+							lda #<datW1
 							sta LOB_DATA				
 							lda #>datW1					
 							sta HIB_DATA				
@@ -1354,7 +1360,7 @@ drawW1				lda #4
 							sta CHARDATA_W
 							lda #13
 							sta CHARDATA_H
-							lda #<datW1C				; W1 color
+							lda #<datW1C
 							sta LOB_DATA				
 							lda #>datW1C					
 							sta HIB_DATA				
@@ -1369,7 +1375,7 @@ drawE1				lda #4
 							sta CHARDATA_W
 							lda #13
 							sta CHARDATA_H
-							lda #<datE1					; E1 chars
+							lda #<datE1
 							sta LOB_DATA				
 							lda #>datE1					
 							sta HIB_DATA				
@@ -1382,7 +1388,7 @@ drawE1				lda #4
 							sta CHARDATA_W
 							lda #13
 							sta CHARDATA_H
-							lda #<datE1C				; E1 color
+							lda #<datE1C
 							sta LOB_DATA				
 							lda #>datE1C						
 							sta HIB_DATA				
@@ -1397,7 +1403,7 @@ drawHorizon		lda #18
 							sta CHARDATA_W
 							lda #15
 							sta CHARDATA_H
-							lda #<datHorizon				; HORIZON chars
+							lda #<datHorizon
 							sta LOB_DATA				
 							lda #>datHorizon					
 							sta HIB_DATA				
@@ -1410,7 +1416,7 @@ drawHorizon		lda #18
 							sta CHARDATA_W
 							lda #15
 							sta CHARDATA_H
-							lda #<datHorizonC				; HORIZON color
+							lda #<datHorizonC
 							sta LOB_DATA				
 							lda #>datHorizonC					
 							sta HIB_DATA				
@@ -1480,7 +1486,7 @@ l1      			lda result,x
 l2      			lda result,x
         			;ora #$e2
 							clc
-							adc #$e2							
+							adc #S_0							
 							; insert other print routine here
         			sta resultstr,x										
         			dex
@@ -1516,6 +1522,8 @@ result  		!byte 0,0,0,0,0,0,0,0,0,0
 resultstr		!byte S_0,S_0,S_0,S_0,S_0,S_0,S_0,S_0,S_0,S_0			
 
 !zone mapData
+	  					!byte W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W	
+  						!byte W,W,W,W,W,W,S,W,W,W,W,W,W,W,W,W,W,W,W,W	
 map						!byte W,W,W,W,W,W,S,W,W,W,W,W,W,W,W,W,W,W,W,W
 							!byte W,S,W,S,S,S,S,S,S,S,S,S,S,S,S,S,W,W,W,W
 							!byte W,S,W,S,S,S,S,S,S,S,W,W,S,W,S,S,W,W,W,W
@@ -1528,17 +1536,18 @@ map						!byte W,W,W,W,W,W,S,W,W,W,W,W,W,W,W,W,W,W,W,W
 							!byte W,S,S,S,S,S,S,S,S,S,S,S,S,S,S,S,W,W,W,W
 							!byte W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W
 							!byte W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W
+							!byte W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W							
+							!byte W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W
 						
 !zone uiData	; TODO we should shrink this down...2k is too much for the ui .. and we dont need the blanks
 datUi				!media "assets\uiMc.charscreen",char,0,0,40,25
 datUiC			!media "assets\uiMc.charscreen",color,0,0,40,25											
 
 !align 63,0
-spriteTiles
- !media "assets\cursor.spriteproject",sprite,0,1
+spriteTiles !media "assets\cursor.spriteproject",sprite,0,1
 
 *=$2000
-!media "assets\dungeon0mc.charscreen",CHARSET
+charSet			!media "assets\uiMc.charscreen",charset
 
 *=$3000
 !zone canvasData
@@ -1566,3 +1575,6 @@ datN3				!media "assets\dungeon0mc.charscreen",char,6,15,6,3
 datN3C			!media "assets\dungeon0mc.charscreen",color,6,15,6,3																			
 datE3				!media "assets\dungeon0mc.charscreen",char,12,15,6,3
 datE3C			!media "assets\dungeon0mc.charscreen",color,12,15,6,3
+
+
+!source "_includes\sound.asm"
