@@ -468,7 +468,7 @@ getJoy2				;lda $dc00
 up       			lda #%00000001
          			bit $dc00
          			bne down      	
-         			dec dy      		
+         			dec dy		
 down     			lda #%00000010
 				 			bit $dc00
          			bne left
@@ -999,7 +999,6 @@ w0 !byte $20
 e0 !byte $20
 
 !zone canvas
-	; TODO we have to fix this...shortening needed, otherwise creatic artifacts
 initCanvas		jsr drawHorizon
 
 +							lda w3
@@ -1051,7 +1050,7 @@ initCanvas		jsr drawHorizon
 							jsr drawE0												
 +							rts
 	
-!zone movePlayer
+!zone subsMovePlayer
 movePlayerF		lda pd							; move player forward in pd (player direction) TODO maybe cycle optimization needed
 							cmp #NORTH
 							bne +
@@ -1209,7 +1208,7 @@ drawChars			ldx #0							; x = 0 for our row number
 							bne --
 							rts		
 
-!zone drawCanvas						; single routines for drawing walls, floor and ceiling
+!zone subsCanvas								; single routines for drawing walls, floor and ceiling
 drawW3				lda #6
 							sta CHARDATA_W
 							lda #3
@@ -1606,7 +1605,7 @@ drawUi				lda #40
 							rts
 				
 						
-!zone clearingRoutines						
+!zone subsClearing						
 clearScreen		lda #147
 							jsr PRINT
 							rts
@@ -1624,7 +1623,7 @@ clearValues		lda #$30
 							sta result+1
 							sta result+2
 							rts							
-!zone math							
+!zone subsMath							
 printdec			jsr hex2dec			
         			ldx #9
 l1      			lda result,x
@@ -1669,7 +1668,7 @@ value   		!byte 0,0,0,0
 result  		!byte 0,0,0,0,0,0,0,0,0,0
 resultstr		!byte S_0,S_0,S_0,S_0,S_0,S_0,S_0,S_0,S_0,S_0			
 
-!zone mapData
+!zone dataMaps
 	  					!byte W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W	
   						!byte W,W,W,W,W,W,S,W,W,W,W,W,W,W,W,W,W,W,W,W	
 map						!byte W,W,W,W,W,W,S,W,W,W,W,W,W,W,W,W,W,W,W,W
