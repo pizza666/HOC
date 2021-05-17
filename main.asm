@@ -12,6 +12,10 @@ HIB_SCREEN			= $95   ; screen/color hibyte in ZP
 CHARDATA_W			= $96   ; data width in ZP
 CHARDATA_H			= $fb   ; data hight in ZP
 
+; rng and dice
+SEED						= $02
+LASTD6					= $06
+
 ; TODO we could store px py pd here
 
 ; ui const
@@ -117,18 +121,20 @@ main
 									lda #$18									; use charset at $2000
 									sta VIC_MEMSETUP	
 									; activate multicolor
-									 lda #16
-									 ora $d016
-									 sta $d016
-									 lda #12
-						  		 sta $d022
-									 lda #15
-									 sta $d023
-							
+									lda #16
+									ora $d016
+									sta $d016
+									lda #12
+						  		sta $d022
+									lda #15
+									sta $d023
+									
+									jsr genSeed
 									jsr drawUi
 									;jsr drawMap;
 									jsr getFov
 									jsr initCanvas
+								  jsr genSeed
 !zone initSprites
 	
  									lda #SPR_CURSOR
@@ -246,8 +252,9 @@ key_D					lda KEYCOLS
 							jsr movePlayerE
 key_6					lda KEYCOLS
 							and #8
-							bne key_7					
-							jsr initCanvas	
+							bne key_7	
+							jsr debugDice
+																	
 key_7					lda #KEYROW_4			; #4
 							sta KEYROWS
 							lda KEYCOLS
@@ -325,7 +332,109 @@ printdebugs		jsr clearValues
 							lda #S_D
 							sta DEBUGPOS+10
 							rts	
-														
+
+debugDice			jsr clearValues
+
+							jsr rollD6			
+							lda LASTD6
+							sta value
+							jsr printdec
+							lda resultstr
+							sta DEBUGPOS+16
+							lda resultstr+1
+							sta DEBUGPOS+15
+						
+							lda LASTD6
+							cmp #1
+							bne +
+							inc d6_1
+							lda d6_1
+							sta value
+							jsr printdec
+							lda resultstr
+							sta DEBUGPOS+20
+							lda resultstr+1
+							sta DEBUGPOS+19
+							jsr clearValues															
+							
++							lda LASTD6
+							cmp #2
+							bne +
+							inc d6_2	
+							lda d6_2
+							sta value
+							jsr printdec
+							lda resultstr
+							sta DEBUGPOS+23
+							lda resultstr+1
+							sta DEBUGPOS+22
+							jsr clearValues
+							
++							lda LASTD6
+							cmp #3
+							bne +
+							inc d6_3	
+							lda d6_3
+							sta value
+							jsr printdec
+							lda resultstr
+							sta DEBUGPOS+26
+							lda resultstr+1
+							sta DEBUGPOS+25
+						  jsr clearValues	
+
++							lda LASTD6
+							cmp #4
+							bne +
+							inc d6_4	
+							lda d6_4
+							sta value
+							jsr printdec
+							lda resultstr
+							sta DEBUGPOS+29
+							lda resultstr+1
+							sta DEBUGPOS+28
+						  jsr clearValues					
+
++							lda LASTD6
+							cmp #5
+							bne +
+							inc d6_5
+							lda d6_5
+							sta value
+							jsr printdec
+							lda resultstr
+							sta DEBUGPOS+32
+							lda resultstr+1
+							sta DEBUGPOS+31
+						  jsr clearValues	
+							
++							lda LASTD6
+							cmp #6
+							bne +
+							inc d6_6	
+							lda d6_6
+							sta value
+							jsr printdec
+							lda resultstr
+							sta DEBUGPOS+35
+							lda resultstr+1
+							sta DEBUGPOS+34
+						  jsr clearValues
+
+
++							inc dCount	
+							lda dCount
+							sta value
+							jsr printdec
+							lda resultstr
+							sta DEBUGPOS+38
+							lda resultstr+1
+							sta DEBUGPOS+37
+						  jsr clearValues							
+							
++							jsr clearValues
+							rts
 							
 						
 
@@ -1576,5 +1685,6 @@ datN3C			!media "assets\dungeon0mc.charscreen",color,6,15,6,3
 datE3				!media "assets\dungeon0mc.charscreen",char,12,15,6,3
 datE3C			!media "assets\dungeon0mc.charscreen",color,12,15,6,3
 
-
+!zone subsExternal
 !source "_includes\sound.asm"
+!source "_includes\dice.asm"
