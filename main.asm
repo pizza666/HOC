@@ -178,9 +178,9 @@ key_1					sta KEYROWS
 							and #1
 							bne key_2
 							
-							lda #<spriteSword
+							lda #<spriteAxe
 							sta LOB_DATA
-							lda #>spriteSword
+							lda #>spriteAxe
 							sta HIB_DATA
 							lda #<SPR_RAM
 							sta LOB_SCREEN
@@ -192,9 +192,9 @@ key_2					lda KEYCOLS
 							and #8
 							bne key_Q		
 		
-							lda #<spriteAxe
+							lda #<spriteAxe2
 							sta LOB_DATA
-							lda #>spriteAxe
+							lda #>spriteAxe2
 							sta HIB_DATA
 							lda #<SPR_RAM
 							sta LOB_SCREEN
@@ -1698,6 +1698,8 @@ spriteSword !media "assets\weapons.spriteproject",sprite,0,1
 spriteSwordC!byte 12
 spriteAxe		!media "assets\weapons.spriteproject",sprite,1,1
 spriteAxeC	!byte 9
+spriteAxe2		!media "assets\weapons.spriteproject",sprite,2,1
+spriteAxe2C	!byte 9
 
 !zone dataCharsets
 *=$2000
