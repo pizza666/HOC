@@ -41,6 +41,16 @@ EAST						= %01000100 ; $44 - 68
 SOUTH						= %00100010 ; $22 - 34
 WEST						= %00010001 ; $11 - 17
 
+; sprites
+SPR_RAM			 		= 832
+SPR_CURSOR			= 13
+
+; sprites - weapons
+WPNSPRTX				= 140
+WPNSPRTY				= 128
+
+; char const
+; quest const
 ICON_NORTH			= $ab
 ICON_EAST				= ICON_NORTH+1
 ICON_SOUTH			= ICON_NORTH+2
@@ -84,10 +94,6 @@ N3CPOS					= CANVASCPOS+$f6
 BACKGROUNDCOLOR				= COLOR_DARKGREY
 ;BACKGROUNDCOLOR		= COLOR_BLACK
 BORDERCOLOR				= COLOR_BLACK
-
-; sprites
-SPR_RAM			 		= 832
-SPR_CURSOR			= 13
 
 ; debug
 DEBUGPOS				= SCREEN+$3c0
@@ -143,22 +149,6 @@ main
  									sta VIC_SPRITEACTIVE
  									lda #1
  									sta VIC_SPRITEMULTICOLOR 									
-									
-									ldx #62
-sprCursorLoad			lda spriteTiles,x
- 									sta SPR_RAM,x								
- 									dex		
- 									bne sprCursorLoad									
- 									lda #6
- 									sta VIC_SPRITE0COLOR
- 									lda #1
- 									sta VIC_SPRITEMULTICOLOR0
- 									lda #14
- 									sta VIC_SPRITEMULTICOLOR1			
- 									lda #100
- 									sta VIC_SPRITE0X
- 									lda #100
- 									sta VIC_SPRITE0Y
 
 !zone gameloop							
 gameloop									; start the game loop
@@ -175,22 +165,43 @@ wait2 				inx
 !zone inputLoops
 
 
-							jsr getJoy2
-
-movesprite		ldx dx
-							stx VIC_SPRITE0X
-							ldy dy
-							sty VIC_SPRITE0Y
-
+							;jsr getJoy2
+;
+;movesprite		ldx dx
+;							stx VIC_SPRITE0X
+;							ldy dy
+;							sty VIC_SPRITE0Y
 	
 							lda #KEYROW_8				; #8
 key_1					sta KEYROWS
 							lda KEYCOLS
 							and #1
-							bne key_2																												
+							bne key_2
+							
+							lda #<spriteSword
+							sta LOB_DATA
+							lda #>spriteSword
+							sta HIB_DATA
+							lda #<SPR_RAM
+							sta LOB_SCREEN
+							lda #>SPR_RAM
+							sta HIB_SCREEN						
+							jsr loadWeaponSprite												
+							
 key_2					lda KEYCOLS
 							and #8
-							bne key_Q					
+							bne key_Q		
+		
+							lda #<spriteAxe
+							sta LOB_DATA
+							lda #>spriteAxe
+							sta HIB_DATA
+							lda #<SPR_RAM
+							sta LOB_SCREEN
+							lda #>SPR_RAM
+							sta HIB_SCREEN						
+							jsr loadWeaponSprite
+							
 key_Q					lda KEYCOLS
 							and #64			
 							bne key_3
@@ -1536,7 +1547,35 @@ drawHorizon		lda #18
 							jsr drawChars
 							rts					
 							
-!zone UI
+
+!zone subsSprites
+
+loadWeaponSprite	ldy #63
+									dey
+-									lda (LOB_DATA),y
+ 									sta (LOB_SCREEN),y								
+ 									dey		
+ 									bne -	
+
+ 									lda #1
+									sta VIC_SPRITEMULTICOLOR0									
+ 									lda #15
+									sta VIC_SPRITEMULTICOLOR1
+								 	ldy #64	
+									lda (LOB_DATA),y
+									sta VIC_SPRITE0COLOR
+
+ 									lda #WPNSPRTX
+ 									sta VIC_SPRITE0X
+ 									lda #WPNSPRTY
+ 									sta VIC_SPRITE0Y
+									lda VIC_SPRITEDOUBLEHEIGHT
+									ora #%00000001
+									sta VIC_SPRITEDOUBLEHEIGHT
+									rts
+	
+							
+!zone subsUi
 
 drawUi				lda #40
 							sta CHARDATA_W
@@ -1648,18 +1687,25 @@ map						!byte W,W,W,W,W,W,S,W,W,W,W,W,W,W,W,W,W,W,W,W
 							!byte W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W							
 							!byte W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W
 						
-!zone uiData	; TODO we should shrink this down...2k is too much for the ui .. and we dont need the blanks
+!zone dataUi	; TODO we should shrink this down...2k is too much for the ui .. and we dont need the blanks
 datUi				!media "assets\uiMc.charscreen",char,0,0,40,25
 datUiC			!media "assets\uiMc.charscreen",color,0,0,40,25											
 
-!align 63,0
-spriteTiles !media "assets\cursor.spriteproject",sprite,0,1
+!zone dataSprites
+;!align 63,0
+;spriteTiles 	!media "assets\cursor.spriteproject",sprite,0,1
 
+spriteSword !media "assets\weapons.spriteproject",sprite,0,1
+spriteSwordC!byte 12
+spriteAxe		!media "assets\weapons.spriteproject",sprite,1,1
+spriteAxeC	!byte 9
+
+!zone dataCharsets
 *=$2000
 charSet			!media "assets\uiMc.charscreen",charset
 
 *=$3000
-!zone canvasData
+!zone dataCanvas
 datHorizon  !media "assets\uiMc.charscreen",char,0,0,18,15																								
 datHorizonC !media "assets\uiMc.charscreen",color,0,0,18,15
 datW0				!media "assets\dungeon0mc.charscreen",char,38,10,1,15
