@@ -291,25 +291,26 @@ CIA1_TIMER_B_CONTROL= $dc0f         ;(15) Kontrollregister für Timer B
 ;*******************************************************************************
 ;*** Die SID Register  -  ANFANG                                             ***
 ;*******************************************************************************
-SID_BASE            = $d400         ;(Nr) Basisadresse des SID_BASE
-SID_VOICE1_FREQ_MSB = $d401         ;(01) 1. Stimme: High-Byte der Frequenz
-SID_VOICE1_WAVEFORM = $d404         ;(04) 1. Stimme: Wellenform
-SID_SUSTAIN_RELEASE = $d406         ;(06) BIT 7-4: Anschlag (sustain)
-                                    ;         3-0: Abschwellen (release)
-SID_VOLUME          = $d418         ;(24) BIT   7: 3. Stimme Filtermodus AUS
-                                    ;           6:   -''-    Hochpass
-                                    ;           5:   -''-    Bandpass
-                                    ;           4:   -''-    Tiefpass
-                                    ;         3-0: Lautstärke
+SID_BASE            				= $d400         ;(Nr) Basisadresse des SID_BASE
+SID_VOICE1_FREQ_LSB					= SID_BASE
+SID_VOICE1_FREQ_MSB 				= SID_BASE+$1    ;(01) 1. Stimme: High-Byte der Frequenz
+SID_VOICE1_WAVEFORM 				= SID_BASE+$4    ;(04) 1. Stimme: Wellenform
+SID_VOICE1_ATACK_DECAY			= SID_BASE+$5		;(05) 0-3 decay 4-7 attack
+SID_VOICE1_SUSTAIN_RELEASE	=	SID_BASE+$6		;(06) BIT 7-4: Anschlag (sustain)
+                                   					; 3-0: Abschwellen (release)
+SID_VOLUME          				= SID_BASE+$18   ;(24) BIT   7: 3. Stimme Filtermodus AUS
+                                    				;        6:   -''-    Hochpass
+                                    				;        5:   -''-    Bandpass
+                                    				;        4:   -''-    Tiefpass
+                                    				;         3-0: Lautstärke
 
-SID_WAVE_TRIANGLE   = $11           ;Wellenform: Dreieck
-SID_WAVE_SAWTOOTH   = $21           ;Wellenform: Sägezahn
-SID_WAVE_PULSE      = $41           ;Wellenform: Rechteck
-SID_WAVE_WHITENOISE = $81           ;Wellenform: Rauschen
+SID_WAVE_TRIANGLE   = $11   ;Wellenform: Dreieck
+SID_WAVE_SAWTOOTH   = $21   ;Wellenform: Sägezahn
+SID_WAVE_PULSE      = $41   ;Wellenform: Rechteck
+SID_WAVE_WHITENOISE = $81   ;Wellenform: Rauschen
 ;*******************************************************************************
 ;*** Die SID Register  -  ENDE                                               ***
 ;*******************************************************************************
-
 
 
 !zone Generic

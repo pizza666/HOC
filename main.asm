@@ -25,7 +25,6 @@ LMOFFSET				= $8b
 LEFTMENUPOS			= SCREEN+LMOFFSET
 LEFTMENUCOLOR		= SCREENCOLOR+LMOFFSET
 
-
 ; map const
 MAPWIDTH				= 20
 MAPHIGHT				= 12
@@ -108,6 +107,7 @@ KEYROW_8				= %01111111 ; (127/$7f)     | STOP  ($  )|   q   ($11)|COMMODR($  )|
 														;+----+---------+------------+------------+------------+------------+------------+------------+------------+------------+
 main
 !zone initScreen
+
 									lda #BORDERCOLOR
 									sta VIC_BORDERCOLOR
 									lda #BACKGROUNDCOLOR
@@ -209,7 +209,7 @@ key_W					lda KEYCOLS
 							jsr getFov
 							jsr drawHorizon
 							jsr initCanvas
-							jsr soundOff			
+							jsr stopSidV1			
 key_A					lda KEYCOLS
 							and #4
 							bne key_4
