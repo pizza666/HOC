@@ -47,6 +47,7 @@ SPR_CURSOR			= 13
 
 ; sprites - weapons
 WPNSPRTX				= 140
+WPNSPRTX2				= 110
 WPNSPRTY				= 128
 
 ; char const
@@ -141,14 +142,19 @@ main
 									jsr getFov
 									jsr initCanvas
 								  jsr genSeed
+									
+								  jsr loadBow
+								
 !zone initSprites
 	
- 									lda #SPR_CURSOR
+ 									lda #14
  									sta SPRITEPOINTER0
- 									lda #1
+									lda #13
+ 									sta SPRITEPOINTER1
+ 									lda #3
  									sta VIC_SPRITEACTIVE
- 									lda #1
- 									sta VIC_SPRITEMULTICOLOR 									
+ 									lda #3
+ 									sta VIC_SPRITEMULTICOLOR 								
 
 !zone gameloop							
 gameloop									; start the game loop
@@ -178,29 +184,42 @@ key_1					sta KEYROWS
 							and #1
 							bne key_2
 							
-							lda #<spriteAxe
-							sta LOB_DATA
-							lda #>spriteAxe
-							sta HIB_DATA
-							lda #<SPR_RAM
-							sta LOB_SCREEN
-							lda #>SPR_RAM
-							sta HIB_SCREEN						
-							jsr loadWeaponSprite												
+							;lda #<spriteSword
+							;sta LOB_DATA
+							;lda #>spriteAxe
+							;sta HIB_DATA
+							;lda #<SPR_RAM
+							;sta LOB_SCREEN
+							;lda #>SPR_RAM
+							;sta HIB_SCREEN						
+							;jsr loadWeaponSprite	
+							;lda #WPNSPRTX
+							;sta VIC_SPRITE0X
+
+							ldx #13
+							stx SPRITEPOINTER0
+							ldx #WPNSPRTX
+							stx VIC_SPRITE0X
 							
 key_2					lda KEYCOLS
 							and #8
 							bne key_Q		
 		
-							lda #<spriteAxe2
-							sta LOB_DATA
-							lda #>spriteAxe2
-							sta HIB_DATA
-							lda #<SPR_RAM
-							sta LOB_SCREEN
-							lda #>SPR_RAM
-							sta HIB_SCREEN						
-							jsr loadWeaponSprite
+							;lda #<spriteAxe2
+							;sta LOB_DATA
+							;lda #>spriteAxe2
+							;sta HIB_DATA
+							;lda #<SPR_RAM
+							;sta LOB_SCREEN
+							;lda #>SPR_RAM
+							;sta HIB_SCREEN						
+							;jsr loadWeaponSprite
+							;lda #WPNSPRTX2
+							;sta VIC_SPRITE0X
+							ldx #14
+							stx SPRITEPOINTER0
+							ldx #WPNSPRTX2
+							stx VIC_SPRITE0X
 							
 key_Q					lda KEYCOLS
 							and #64			
@@ -216,7 +235,20 @@ key_3					lda #KEYROW_2				; #2
 							sta KEYROWS
 							lda KEYCOLS
 							and #1
-							bne key_W						
+							bne key_W		
+			
+							;lda #<spriteSword
+							;sta LOB_DATA
+							;lda #>spriteSword
+							;sta HIB_DATA
+							;lda #<SPR_RAM
+							;sta LOB_SCREEN
+							;lda #>SPR_RAM
+							;sta HIB_SCREEN						
+							;jsr loadWeaponSprite
+							;lda #WPNSPRTX
+							;sta VIC_SPRITE0X
+							
 key_W					lda KEYCOLS
 							and #2
 							bne key_A
@@ -235,8 +267,15 @@ key_A					lda KEYCOLS
 key_4					lda KEYCOLS
 							and #8
 							bne key_S						
-							jsr initCanvas
-key_S					lda KEYCOLS
+							
+							;ldx #14
+							;stx SPRITEPOINTER0
+							;ldx #WPNSPRTX2
+							;stx VIC_SPRITE0X
+							
+key_S					lda #KEYROW_2	
+							sta KEYROWS
+							lda KEYCOLS
 							and #32
 							bne key_E							
 							jsr initCanvas
@@ -296,6 +335,7 @@ key_0					lda KEYCOLS
 							jsr initCanvas
 							jsr drawMap
 							jsr drawPlayer
+							
 +							jsr printdebugs
 gameloopEnd		jmp gameloop
 							
@@ -449,7 +489,7 @@ debugDice			jsr clearValues
 							
 						
 
-!zone vars
+!zone varsPlayer
 ; #  variables go here
 ; ######################################
 
@@ -457,6 +497,16 @@ px						!byte 12,0,0,0				; player x coordinate
 py						!byte 9,0,0,0				; player y coordinate
 pd						!byte %10001000			; player direction
 pIco					!byte	ICON_NORTH		; which icon to use for the player on map
+pST						!byte 10
+pDX						!byte 10
+pIQ						!byte 10
+pHT						!byte 10
+pHP						!byte 10
+pFP						!byte 10
+
+
+pRace					!byte
+
 
 !zone inputRoutines
 dx						!byte 250,0
@@ -494,11 +544,9 @@ fire 		 			lda #%00010000
          			bne end
 end						rts
 
-!zone subRoutines
-; #  sub routines here
-; ######################################
+!zone subLeftMenu
 
-; rotating and moving
+;
 drawMap				lda #MAPWIDTH
 							sta CHARDATA_W
 							lda #MAPHIGHT
@@ -514,10 +562,16 @@ drawMap				lda #MAPWIDTH
 							jsr drawChars
 							jsr drawPlayer
 							rts
+							
+drawChar			
+							rts
+
+drawInv				rts
+							
 
 ; fov -  directions are pd based
 
-!zone fovRoutines
+!zone subsFov
 						
 getFov				lda pd					; get direction and jsr the correct direction FOV routine
 							cmp #NORTH
@@ -1549,21 +1603,20 @@ drawHorizon		lda #18
 
 !zone subsSprites
 
-loadWeaponSprite	ldy #63
+loadWeaponSprite	ldy #192
 									dey
 -									lda (LOB_DATA),y
  									sta (LOB_SCREEN),y								
  									dey		
  									bne -	
-
- 									lda #1
+									lda #1
 									sta VIC_SPRITEMULTICOLOR0									
  									lda #15
 									sta VIC_SPRITEMULTICOLOR1
 								 	ldy #64	
-									lda (LOB_DATA),y
-									sta VIC_SPRITE0COLOR
+									rts
 
+activateSprite0 	stx VIC_SPRITE0COLOR
  									lda #WPNSPRTX
  									sta VIC_SPRITE0X
  									lda #WPNSPRTY
@@ -1572,7 +1625,58 @@ loadWeaponSprite	ldy #63
 									ora #%00000001
 									sta VIC_SPRITEDOUBLEHEIGHT
 									rts
-	
+									
+activateSprite1 	stx VIC_SPRITE1COLOR
+ 									lda #WPNSPRTX
+ 									sta VIC_SPRITE1X
+ 									lda #WPNSPRTY
+ 									sta VIC_SPRITE1Y
+									lda VIC_SPRITEDOUBLEHEIGHT
+									ora #%00000010
+									sta VIC_SPRITEDOUBLEHEIGHT
+									rts									
+									
+loadSword					lda #<spriteSword
+									sta LOB_DATA
+									lda #>spriteSword
+									sta HIB_DATA
+									lda #<SPR_RAM
+									sta LOB_SCREEN
+									lda #>SPR_RAM
+									sta HIB_SCREEN
+									ldx #COLOR_GREY				
+									jsr loadWeaponSprite
+									jsr activateSprite0
+									rts
+									
+loadAxe						lda #<spriteAxe
+									sta LOB_DATA
+									lda #>spriteAxe
+									sta HIB_DATA
+									lda #<SPR_RAM
+									sta LOB_SCREEN
+									lda #>SPR_RAM
+									sta HIB_SCREEN
+									ldx #COLOR_BROWN			
+									jsr loadWeaponSprite
+									jsr activateSprite0
+									
+									rts									
+loadBow						lda #<spriteBow
+									sta LOB_DATA
+									lda #>spriteBow
+									sta HIB_DATA
+									lda #<SPR_RAM
+									sta LOB_SCREEN
+									lda #>SPR_RAM
+									sta HIB_SCREEN
+									jsr loadWeaponSprite
+									ldx #COLOR_BROWN
+									jsr activateSprite1
+									ldx #COLOR_PINK	
+									jsr activateSprite0
+									rts	
+									
 							
 !zone subsUi
 
@@ -1691,15 +1795,11 @@ datUi				!media "assets\uiMc.charscreen",char,0,0,40,25
 datUiC			!media "assets\uiMc.charscreen",color,0,0,40,25											
 
 !zone dataSprites
-;!align 63,0
-;spriteTiles 	!media "assets\cursor.spriteproject",sprite,0,1
 
-spriteSword !media "assets\weapons.spriteproject",sprite,0,1
-spriteSwordC!byte 12
-spriteAxe		!media "assets\weapons.spriteproject",sprite,1,1
-spriteAxeC	!byte 9
-spriteAxe2		!media "assets\weapons.spriteproject",sprite,2,1
-spriteAxe2C	!byte 9
+spriteSword 	!media "assets\weapons.spriteproject",sprite,0,2
+spriteAxe			!media "assets\weapons.spriteproject",sprite,2,2
+spriteBow			!media "assets\weapons.spriteproject",sprite,4,2		
+
 
 !zone dataCharsets
 *=$2000
