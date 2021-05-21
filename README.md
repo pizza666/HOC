@@ -28,3 +28,16 @@ An RPG/dungeon crawler for C64 with pseudo 3D graphics
 * Different dungeon level designs (color iterations)
 * Forest
 * ?
+
+## Screenshots
+
+### Weapons
+
+## Axe
+![Axe](https://github.com/pizza666/HOC/blob/main/_doc/axe.png?raw=true)
+
+## Sword
+![Sword](https://github.com/pizza666/HOC/blob/main/_doc/sword.png?raw=true)
+
+## Bow
+![Axe](https://github.com/pizza666/HOC/blob/main/_doc/bow.png?raw=true)
