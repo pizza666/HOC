@@ -4,7 +4,10 @@ An RPG/dungeon crawler for C64 with pseudo 3D graphics
 
 ## Build instructions
 
-Use https://www.georg-rottensteiner.de/de/index.html C64 Studio to build PRG files
+Use C64 Studio by Georg Rottensteiner to build/compile/debug
+
+* https://github.com/GeorgRottensteiner/C64Studio
+* https://www.georg-rottensteiner.de/de/index.html 
 
 ## Working Features
 
