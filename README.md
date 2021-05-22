@@ -9,6 +9,19 @@ Use C64 Studio by Georg Rottensteiner to build/compile/debug
 * https://github.com/GeorgRottensteiner/C64Studio
 * https://www.georg-rottensteiner.de/de/index.html 
 
+## Kebinds
+
+* W: Walk farward
+* S: Walk backwards
+* Q: Rotate left
+* E: Rotate right
+* 3: Sword
+* 4: Axe
+* 5: Bow
+* 6: Roll d6
+* M: Open Map
+* C: Open character screen
+
 ## Working Features
 
 * Byte-Tile based map loading
