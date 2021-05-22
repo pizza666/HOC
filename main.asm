@@ -3,11 +3,11 @@
 *=$801
 !basic main
 
-!zone constants
-; Zero Pages
+!zone zeropages
+; zero Pages
 LOB_DATA				= $92		; data lobyte in ZP
 HIB_DATA				= $93   ; data hibyte in ZP
-LOB_SCREEN			= $94 		; screen/color lobyte in ZP
+LOB_SCREEN			= $94 	; screen/color lobyte in ZP
 HIB_SCREEN			= $95   ; screen/color hibyte in ZP
 CHARDATA_W			= $96   ; data width in ZP
 CHARDATA_H			= $fb   ; data hight in ZP
@@ -16,8 +16,12 @@ CHARDATA_H			= $fb   ; data hight in ZP
 SEED						= $02
 LASTD6					= $06
 
-; TODO we could store px py pd here
+; text/strings
+LOB_TXTPTR			= $03
+HIB_TXTPTR			= $04
 
+
+!zone consts
 ; ui const
 UIWIDTH					= 40
 UIHIGHT					= 25
@@ -32,8 +36,8 @@ LEFTMENUCOLOR		= SCREENCOLOR+LMOFFSET
 ; map const
 MAPWIDTH				= 20
 MAPHIGHT				= 12
-W							  = $af				;normal wall
-S								= $09				;normal floor/sky (space)		
+W							  = 175				;normal wall
+S								= 35				;normal floor/sky (space)		
 MAPPOS 					= LEFTMENUPOS
 MAPCOLOR				= LEFTMENUCOLOR
 NORTH						= %10001000 ; $88 - 136
@@ -50,8 +54,6 @@ WPNSPRTX				= 140
 WPNSPRTX2				= 110
 WPNSPRTY				= 128
 
-; char const
-; quest const
 ICON_NORTH			= $ab
 ICON_EAST				= ICON_NORTH+1
 ICON_SOUTH			= ICON_NORTH+2
@@ -69,6 +71,7 @@ CANVASPOS				= SCREEN
 CANVASCPOS			= SCREENCOLOR
 HORIZONPOS			= CANVASPOS
 HORIZONCPOS			= CANVASCPOS
+
 ; walls
 W0POS						= CANVASPOS
 W0CPOS					= CANVASCPOS
@@ -92,9 +95,8 @@ N2POS						= CANVASPOS+$a4
 N2CPOS					= CANVASCPOS+$a4
 N3POS						= CANVASPOS+$f6
 N3CPOS					= CANVASCPOS+$f6
-BACKGROUNDCOLOR				= COLOR_DARKGREY
-;BACKGROUNDCOLOR		= COLOR_BLACK
-BORDERCOLOR				= COLOR_BLACK
+BACKGROUNDCOLOR	= COLOR_DARKGREY
+BORDERCOLOR			= COLOR_BLACK
 
 ; debug
 DEBUGPOS				= SCREEN+$3c0
@@ -138,19 +140,12 @@ main
 									
 									jsr genSeed
 									jsr drawUi
-									;jsr drawMap;
 									jsr getFov
 									jsr initCanvas
 								  jsr genSeed
-									
-								  jsr loadBow
 								
 !zone initSprites
 	
- 									lda #14
- 									sta SPRITEPOINTER0
-									lda #13
- 									sta SPRITEPOINTER1
  									lda #3
  									sta VIC_SPRITEACTIVE
  									lda #3
@@ -171,55 +166,15 @@ wait2 				inx
 !zone inputLoops
 
 
-							;jsr getJoy2
-;
-;movesprite		ldx dx
-;							stx VIC_SPRITE0X
-;							ldy dy
-;							sty VIC_SPRITE0Y
-	
 							lda #KEYROW_8				; #8
 key_1					sta KEYROWS
 							lda KEYCOLS
 							and #1
-							bne key_2
-							
-							;lda #<spriteSword
-							;sta LOB_DATA
-							;lda #>spriteAxe
-							;sta HIB_DATA
-							;lda #<SPR_RAM
-							;sta LOB_SCREEN
-							;lda #>SPR_RAM
-							;sta HIB_SCREEN						
-							;jsr loadWeaponSprite	
-							;lda #WPNSPRTX
-							;sta VIC_SPRITE0X
-
-							ldx #13
-							stx SPRITEPOINTER0
-							ldx #WPNSPRTX
-							stx VIC_SPRITE0X
+							bne key_2					
 							
 key_2					lda KEYCOLS
 							and #8
 							bne key_Q		
-		
-							;lda #<spriteAxe2
-							;sta LOB_DATA
-							;lda #>spriteAxe2
-							;sta HIB_DATA
-							;lda #<SPR_RAM
-							;sta LOB_SCREEN
-							;lda #>SPR_RAM
-							;sta HIB_SCREEN						
-							;jsr loadWeaponSprite
-							;lda #WPNSPRTX2
-							;sta VIC_SPRITE0X
-							ldx #14
-							stx SPRITEPOINTER0
-							ldx #WPNSPRTX2
-							stx VIC_SPRITE0X
 							
 key_Q					lda KEYCOLS
 							and #64			
@@ -235,19 +190,8 @@ key_3					lda #KEYROW_2				; #2
 							sta KEYROWS
 							lda KEYCOLS
 							and #1
-							bne key_W		
-			
-							;lda #<spriteSword
-							;sta LOB_DATA
-							;lda #>spriteSword
-							;sta HIB_DATA
-							;lda #<SPR_RAM
-							;sta LOB_SCREEN
-							;lda #>SPR_RAM
-							;sta HIB_SCREEN						
-							;jsr loadWeaponSprite
-							;lda #WPNSPRTX
-							;sta VIC_SPRITE0X
+							bne key_W	
+							jsr loadAxe				
 							
 key_W					lda KEYCOLS
 							and #2
@@ -267,19 +211,20 @@ key_A					lda KEYCOLS
 key_4					lda KEYCOLS
 							and #8
 							bne key_S						
-							
-							;ldx #14
-							;stx SPRITEPOINTER0
-							;ldx #WPNSPRTX2
-							;stx VIC_SPRITE0X
+							jsr loadSword	
 							
 key_S					lda #KEYROW_2	
 							sta KEYROWS
 							lda KEYCOLS
 							and #32
 							bne key_E							
+							jsr playSfx
+							jsr movePlayerB
+							jsr setDirection
+							jsr getFov
+							jsr drawHorizon
 							jsr initCanvas
-							jsr movePlayerS
+							jsr stopSidV1
 key_E					lda KEYCOLS
 							and #64			
 							bne key_5
@@ -293,8 +238,8 @@ key_5					lda #KEYROW_3			; # 3
 							sta KEYROWS
 							lda KEYCOLS
 							and #1
-							bne key_D						
-							jsr initCanvas
+							bne key_D
+							jsr loadBow
 key_D					lda KEYCOLS
 							and #4
 							bne key_6
@@ -302,8 +247,12 @@ key_D					lda KEYCOLS
 							jsr movePlayerE
 key_6					lda KEYCOLS
 							and #8
+							bne key_c
+							jsr debugDice							
+key_c					lda KEYCOLS
+							and #16
 							bne key_7	
-							jsr debugDice
+				      jsr drawCharScr
 																	
 key_7					lda #KEYROW_4			; #4
 							sta KEYROWS
@@ -317,25 +266,21 @@ key_8					lda KEYCOLS
 							jsr initCanvas
 key_B					lda KEYCOLS
 							and #16
-							bne key_9						
-							jsr initCanvas												
+							bne key_9																	
 key_9					lda #KEYROW_5		; #5
 							sta KEYROWS
 							lda KEYCOLS
 							and #1
-							bne key_0																
-							jsr initCanvas									
-key_0					lda KEYCOLS
-							and #8
+							bne key_m																							
+key_m 				lda KEYCOLS
+							and #16
 					    bne +																
+							;jsr setDirection
+							;jsr getFov
 							jsr initCanvas
-							jsr setDirection
-							jsr getFov
-							jsr drawHorizon
-							jsr initCanvas
+							;jsr drawHorizon
 							jsr drawMap
-							jsr drawPlayer
-							
+							jsr drawPlayer							
 +							jsr printdebugs
 gameloopEnd		jmp gameloop
 							
@@ -490,23 +435,18 @@ debugDice			jsr clearValues
 						
 
 !zone varsPlayer
-; #  variables go here
-; ######################################
-
+; pos and direction on map
 px						!byte 12,0,0,0				; player x coordinate
 py						!byte 9,0,0,0				; player y coordinate
 pd						!byte %10001000			; player direction
 pIco					!byte	ICON_NORTH		; which icon to use for the player on map
+; attr
 pST						!byte 10
-pDX						!byte 10
-pIQ						!byte 10
-pHT						!byte 10
-pHP						!byte 10
-pFP						!byte 10
-
-
-pRace					!byte
-
+pDX						!byte 11
+pIQ						!byte 12
+; health and mana
+pHP						!byte 50
+pMP						!byte 40
 
 !zone inputRoutines
 dx						!byte 250,0
@@ -546,7 +486,6 @@ end						rts
 
 !zone subLeftMenu
 
-;
 drawMap				lda #MAPWIDTH
 							sta CHARDATA_W
 							lda #MAPHIGHT
@@ -563,14 +502,33 @@ drawMap				lda #MAPWIDTH
 							jsr drawPlayer
 							rts
 							
-drawChar			
-							rts
-
-drawInv				rts
+drawCharScr		lda #20
+							sta CHARDATA_W
+							lda #12
+							sta CHARDATA_H
+							lda #<datCharScr
+							sta LOB_DATA
+							lda #>datCharScr
+							sta HIB_DATA
+							lda #<LEFTMENUPOS
+							sta LOB_SCREEN
+							lda #>LEFTMENUPOS
+							sta HIB_SCREEN							
+							jsr drawChars
 							
+							; print the vars
+							jsr clearValues
+							lda pST
+							sta value
+							jsr printdec
+							lda resultstr
+							sta SCREEN+$132
+							lda resultstr+1
+							sta SCREEN+$131
+							
+							rts							
 
 ; fov -  directions are pd based
-
 !zone subsFov
 						
 getFov				lda pd					; get direction and jsr the correct direction FOV routine
@@ -1120,6 +1078,21 @@ movePlayerF		lda pd							; move player forward in pd (player direction) TODO ma
 							jsr movePlayerW						
 +							rts
 
+movePlayerB		lda pd
+							cmp #NORTH
+							bne +
+							jsr movePlayerS
++							cmp #EAST
+							bne +
+							jsr movePlayerW
++							cmp #SOUTH
+							bne +
+							jsr movePlayerN
++							cmp #WEST
+							bne +
+							jsr movePlayerE						
++							rts
+
 							
 movePlayerE		lda #<map						; get low byte of the map
 							sta LOB_DATA				; store in zpage
@@ -1635,6 +1608,20 @@ activateSprite1 	stx VIC_SPRITE1COLOR
 									ora #%00000010
 									sta VIC_SPRITEDOUBLEHEIGHT
 									rts									
+
+activateSprite2 	stx VIC_SPRITE2COLOR
+ 									lda #70
+ 									sta VIC_SPRITE2X
+ 									lda #100
+ 									sta VIC_SPRITE2Y
+									lda VIC_SPRITEDOUBLEHEIGHT
+									ora #%00000100
+									sta VIC_SPRITEDOUBLEHEIGHT
+									lda VIC_SPRITEDOUBLEWIDTH
+									ora #%00000100
+									sta VIC_SPRITEDOUBLEWIDTH
+									rts						
+											
 									
 loadSword					lda #<spriteSword
 									sta LOB_DATA
@@ -1644,9 +1631,14 @@ loadSword					lda #<spriteSword
 									sta LOB_SCREEN
 									lda #>SPR_RAM
 									sta HIB_SCREEN
-									ldx #COLOR_GREY				
+									ldx #COLOR_GREY	
+									jsr activateSprite1			
 									jsr loadWeaponSprite
-									jsr activateSprite0
+									
+									lda #13
+ 									sta SPRITEPOINTER1
+									lda #%10
+									sta VIC_SPRITEACTIVE
 									rts
 									
 loadAxe						lda #<spriteAxe
@@ -1657,11 +1649,16 @@ loadAxe						lda #<spriteAxe
 									sta LOB_SCREEN
 									lda #>SPR_RAM
 									sta HIB_SCREEN
-									ldx #COLOR_BROWN			
 									jsr loadWeaponSprite
-									jsr activateSprite0
+									ldx #COLOR_BROWN
+									jsr activateSprite1									
+									lda #13
+ 									sta SPRITEPOINTER1
+									lda #%10
+									sta VIC_SPRITEACTIVE
 									
-									rts									
+									rts	
+									
 loadBow						lda #<spriteBow
 									sta LOB_DATA
 									lda #>spriteBow
@@ -1675,9 +1672,18 @@ loadBow						lda #<spriteBow
 									jsr activateSprite1
 									ldx #COLOR_PINK	
 									jsr activateSprite0
+									
+									lda #15
+ 									sta SPRITEPOINTER0
+									lda #13
+ 									sta SPRITEPOINTER1
+									
+									lda #%11
+									sta VIC_SPRITEACTIVE
+									
 									rts	
 									
-							
+
 !zone subsUi
 
 drawUi				lda #40
@@ -1707,7 +1713,16 @@ drawUi				lda #40
 							sta HIB_SCREEN
 							jsr drawChars
 							rts
-				
+
+!zone subsText
+printScrText	ldy #0
+-							lda (LOB_TXTPTR),y
+							cmp #0
+							beq +
+							sta (LOB_SCREEN),y
+							iny
+							jmp -
++							rts
 						
 !zone subsClearing						
 clearScreen		lda #147
@@ -1735,9 +1750,9 @@ l1      			lda result,x
         			;dex             ; skip leading zeros
         			bne l1
 l2      			lda result,x
-        			;ora #$e2
-							clc
-							adc #S_0							
+        			ora #$30
+							;clc
+							;adc #S_0							
 							; insert other print routine here
         			sta resultstr,x										
         			dex
@@ -1775,39 +1790,30 @@ resultstr		!byte S_0,S_0,S_0,S_0,S_0,S_0,S_0,S_0,S_0,S_0
 !zone dataMaps
 	  					!byte W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W	
   						!byte W,W,W,W,W,W,S,W,W,W,W,W,W,W,W,W,W,W,W,W	
+							;
 map						!byte W,W,W,W,W,W,S,W,W,W,W,W,W,W,W,W,W,W,W,W
-							!byte W,S,W,S,S,S,S,S,S,S,S,S,S,S,S,S,W,W,W,W
-							!byte W,S,W,S,S,S,S,S,S,S,W,W,S,W,S,S,W,W,W,W
+							!byte W,S,W,S,S,S,S,S,S,S,S,S,S,S,S,S,S,S,S,W
+							!byte W,S,W,S,S,S,S,S,S,S,W,W,S,W,S,S,W,S,S,W
 							!byte W,S,S,S,S,S,S,S,S,S,S,S,S,S,S,S,W,W,W,W
-							!byte W,S,S,W,S,W,W,W,S,S,W,W,S,W,S,S,W,W,W,W
+							!byte W,S,S,W,S,W,W,W,S,S,W,W,S,W,S,S,S,S,S,W
+							!byte W,S,S,S,S,W,S,W,S,S,S,S,S,S,S,S,S,S,S,W
 							!byte W,S,S,S,S,W,S,W,S,S,S,S,S,S,S,S,W,W,W,W
-							!byte W,S,S,S,S,W,S,W,S,S,S,S,S,S,S,S,W,W,W,W
 							!byte W,S,S,S,S,S,S,S,S,S,S,S,S,S,S,S,W,W,W,W
 							!byte W,S,S,S,S,S,S,S,S,S,S,S,S,S,S,S,W,W,W,W
-							!byte W,S,S,S,S,S,S,S,S,S,S,S,S,S,S,S,W,W,W,W
+							!byte W,S,S,S,S,S,S,S,S,S,S,S,S,S,S,S,S,S,S,W
+							!byte W,S,S,S,S,S,S,S,S,S,S,S,S,S,S,S,S,S,S,W
 							!byte W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W
-							!byte W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W
-							!byte W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W							
-							!byte W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W
-						
-!zone dataUi	; TODO we should shrink this down...2k is too much for the ui .. and we dont need the blanks
+!zone dataUi												
 datUi				!media "assets\uiMc.charscreen",char,0,0,40,25
-datUiC			!media "assets\uiMc.charscreen",color,0,0,40,25											
-
-!zone dataSprites
-
-spriteSword 	!media "assets\weapons.spriteproject",sprite,0,2
-spriteAxe			!media "assets\weapons.spriteproject",sprite,2,2
-spriteBow			!media "assets\weapons.spriteproject",sprite,4,2		
-
-
+datUiC			!media "assets\uiMc.charscreen",color,0,0,40,25	
+						
 !zone dataCharsets
 *=$2000
 charSet			!media "assets\uiMc.charscreen",charset
 
 *=$3000
 !zone dataCanvas
-datHorizon  !media "assets\uiMc.charscreen",char,0,0,18,15																								
+datHorizon  !media "assets\uiMc.charscreen",char,0,0,18,15
 datHorizonC !media "assets\uiMc.charscreen",color,0,0,18,15
 datW0				!media "assets\dungeon0mc.charscreen",char,38,10,1,15
 datW0C			!media "assets\dungeon0mc.charscreen",color,38,10,1,15
@@ -1828,9 +1834,22 @@ datN1C			!media "assets\dungeon0mc.charscreen",color,0,0,16,13
 datW3				!media "assets\dungeon0mc.charscreen",char,0,15,6,3
 datW3C			!media "assets\dungeon0mc.charscreen",color,0,15,6,3
 datN3				!media "assets\dungeon0mc.charscreen",char,6,15,6,3
-datN3C			!media "assets\dungeon0mc.charscreen",color,6,15,6,3																			
+datN3C			!media "assets\dungeon0mc.charscreen",color,6,15,6,3
 datE3				!media "assets\dungeon0mc.charscreen",char,12,15,6,3
-datE3C			!media "assets\dungeon0mc.charscreen",color,12,15,6,3
+datE3C			!media "assets\dungeon0mc.charscreen",color,12,15,6,3					
+
+!zone dataSprites
+spriteSword 	!media "assets\weapons.spriteproject",sprite,0,2
+spriteAxe			!media "assets\weapons.spriteproject",sprite,2,2
+spriteBow			!media "assets\weapons.spriteproject",sprite,4,4
+
+datCharScr !byte $20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$01,$14,$14,$12,$20,$20,$20,$20,$13,$0b,$09,$0c,$0c,$13,$20,$20,$20,$20,$20
+!byte $20,$27,$27,$27,$27,$27,$27,$27,$20,$27,$27,$27,$27,$27,$27,$27,$27,$27,$27,$20,$20,$0c,$16,$0c,$20,$20,$20,$20,$20,$02,$0c,$01,$04,$05,$13,$20,$20,$20,$20,$20
+!byte $20,$13,$14,$20,$20,$20,$20,$20,$20,$01,$18,$05,$20,$20,$20,$20,$20,$20,$20,$20,$20,$04,$18,$20,$20,$20,$20,$20,$20,$02,$0f,$17,$20,$20,$20,$20,$20,$20,$20,$20
+!byte $20,$09,$11,$20,$20,$20,$20,$20,$20,$0d,$01,$03,$05,$20,$20,$20,$20,$20,$20,$20,$20,$08,$10,$20,$20,$20,$20,$20,$20,$01,$12,$03,$01,$0e,$05,$20,$20,$20,$20,$20
+!byte $20,$0d,$10,$20,$20,$20,$20,$20,$20,$06,$09,$12,$05,$20,$20,$20,$20,$20,$20,$20,$20,$01,$03,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20
+!byte $20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20
+
 
 !zone subsExternal
 !source "_includes\sound.asm"
