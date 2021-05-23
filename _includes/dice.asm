@@ -1,5 +1,5 @@
 ; very simple rng for now, we should
-; regenerate the seed frin SID noise and reuse it for further dice rolls
+; regenerate the seed from SID noise and reuse it for further dice rolls
 
 ; lastDice		!byte 0
 d6_1					!byte 0
@@ -10,30 +10,42 @@ d6_5					!byte 0
 d6_6					!byte 0
 dCount				!byte 0
 
-genSeed	lda #$ff  ; maximum frequency value
-				sta $D40E ; voice 3 frequency low byte
-				sta $D40F ; voice 3 frequency high byte
-				lda #$80  ; noise waveform, gate bit off
-				sta $D412 ; voice 3 control register
-				lda $D41B ; get random value
-        sta SEED
-				rts
+genSeed			lda #$ff  ; maximum frequency value
+						sta $D40E ; voice 3 frequency low byte
+						sta $D40F ; voice 3 frequency high byte
+						lda #$80  ; noise waveform, gate bit off
+						sta $D412 ; voice 3 control register
+						lda $D41B ; get random value
+        		sta SEED
+						rts
 				
-rollD6	jsr newSeed
-				lda SEED				
-				and #%00000111 ; 1-8
-				sta LASTD6
-				inc LASTD6
-				lda LASTD6
-				cmp #7
-				bcs rollD6				
-				rts
+rollD6			jsr genSeed
+						lda SEED				
+						and #%00000111 ; 1-8
+						sta LASTD6
+						inc LASTD6
+						lda LASTD6
+						cmp #7
+						bcs rollD6				
+						rts
+
+rollSuccess	lda #0						; zero out the
+						sta SUCCESSROLL		; last SUCCESSROLL
+						ldx #3						; we need 3d6
+-						jsr rollD6
+						lda SUCCESSROLL
+						clc
+						adc LASTD6
+						sta SUCCESSROLL
+						dex
+						bne -
+						rts
 				
-newSeed lda SEED
-        beq doEor ;added this
-        asl
-        bcc noEor
-doEor   eor #$1d
-noEor   sta SEED
-				rts
+newSeed 		lda SEED
+        		beq doEor 			;added this
+        		asl
+        		bcc noEor
+doEor   		eor #$1d
+noEor   		sta SEED
+						rts
 				

@@ -14,6 +14,7 @@ CHARDATA_H			= $fb   ; data hight in ZP
 
 ; rng and dice
 SEED						= $02
+SUCCESSROLL 		= $05
 LASTD6					= $06
 
 ; text/strings
@@ -142,14 +143,15 @@ main
 									jsr drawUi
 									jsr getFov
 									jsr initCanvas
-								  jsr genSeed
 								
 !zone initSprites
 	
  									lda #3
  									sta VIC_SPRITEACTIVE
  									lda #3
- 									sta VIC_SPRITEMULTICOLOR 								
+ 									sta VIC_SPRITEMULTICOLOR
+	
+									jsr loadSword
 
 !zone gameloop							
 gameloop									; start the game loop
@@ -254,13 +256,13 @@ key_c					lda KEYCOLS
 				      jsr drawCharScr
 key_t					lda KEYCOLS
 							and #64
-							bne key_7																									
+							bne key_7
 key_7					lda #KEYROW_4			; #4
 							sta KEYROWS
 							lda KEYCOLS
 							and #1
 							bne key_8				
-							jsr initCanvas
+							jsr debugSuccessRoll		
 key_8					lda KEYCOLS
 							and #8
 							bne key_B						
@@ -272,7 +274,8 @@ key_9					lda #KEYROW_5		; #5
 							sta KEYROWS
 							lda KEYCOLS
 							and #1
-							bne key_m																							
+							bne key_m	
+							inc psSwords
 key_m 				lda KEYCOLS
 							and #16
 					    bne key_k																
@@ -436,24 +439,36 @@ debugDice			jsr clearValues
 							
 +							jsr clearValues
 							rts
-							
+
+debugSuccessRoll	jsr clearValues
+									jsr rollSuccess			
+									lda SUCCESSROLL
+									sta value
+									jsr printdec
+									lda resultstr
+									sta DEBUGPOS+16
+									lda resultstr+1
+									sta DEBUGPOS+15
+									rts							
 						
 
 !zone varsPlayer
 ; pos and direction on map
 px						!byte 12,0,0,0				; player x coordinate
-py						!byte 9,0,0,0				; player y coordinate
+py						!byte 4,0,0,0				; player y coordinate
 pd						!byte %10001000			; player direction
 pIco					!byte	ICON_NORTH		; which icon to use for the player on map
 ; attr
+pLvl					!byte 1
 pName					!scr "pizza     "
 pST						!byte 10
 pDX						!byte 11
 pIQ						!byte 12
-
 ; health and mana
 pHP						!byte 50
 pMP						!byte 40
+; skills
+psSwords 			!byte 0
 
 !zone inputRoutines
 dx						!byte 250,0
@@ -526,13 +541,38 @@ drawCharScr		lda #20
 							
 							; print the vars
 							jsr clearValues
-							lda pST
+							
+							lda pLvl						; print ST
 							sta value
 							jsr printdec
 							lda resultstr
-							sta SCREEN+$132
+							sta LEFTMENUPOS+127
 							lda resultstr+1
-							sta SCREEN+$131
+							sta LEFTMENUPOS+126
+
+							lda pST							; print ST
+							sta value
+							jsr printdec
+							lda resultstr
+							sta LEFTMENUPOS+167
+							lda resultstr+1
+							sta LEFTMENUPOS+166
+
+							lda pDX							; print DX
+							sta value
+							jsr printdec
+							lda resultstr
+							sta LEFTMENUPOS+207
+							lda resultstr+1
+							sta LEFTMENUPOS+206
+							
+							lda pIQ							; print IQ
+							sta value
+							jsr printdec
+							lda resultstr
+							sta LEFTMENUPOS+247
+							lda resultstr+1
+							sta LEFTMENUPOS+246
 							
 							rts
 							
@@ -550,7 +590,16 @@ drawSkillScr	lda #20
  							sta HIB_SCREEN							
  							jsr drawChars
  							jsr clearValues
- 							; print the vars
+ 							
+							; print the vars
+							jsr clearValues
+							lda psSwords
+							sta value
+							jsr printdec
+							lda resultstr
+							sta LEFTMENUPOS+138
+							lda resultstr+1
+							sta LEFTMENUPOS+137
  							
  							rts								
 
@@ -1872,20 +1921,20 @@ spriteBow			!media "assets\weapons.spriteproject",sprite,4,4
 datCharScr  !scr "                    "
 						!scr " name               "
 						!scr " '''''''''''''''''' "
-						!scr " lvl      xp        "
-						!scr " st                 "
-						!scr " dx                 "
-						!scr " iq                 "
-						!scr " iq                 "
-						!scr " hp                 "
-						!scr " mp                 "
-						!scr " ac                 "
+						!scr " lvl     ^ xp 00000 "
+						!scr " str     ^    00000 "
+						!scr " dex     ^          "
+						!scr " int     ^          "
+						!scr "         ^          "
+						!scr " ac   00 ^          "
+						!scr " hp  000 ^          "
+						!scr " mp  000 ^          "
 						!scr "                    "
 						
 datSkillScr !scr "                    "
-						!scr " skills             "
+						!scr " skills       sl pt "
 						!scr " '''''''''''''''''' "
-						!scr " blades             "
+						!scr " swords             "
 						!scr "                    "
 						!scr "                    "
 						!scr "                    "
