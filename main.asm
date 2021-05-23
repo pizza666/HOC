@@ -165,7 +165,6 @@ wait2 				inx
 						
 !zone inputLoops
 
-
 							lda #KEYROW_8				; #8
 key_1					sta KEYROWS
 							lda KEYCOLS
@@ -251,9 +250,11 @@ key_6					lda KEYCOLS
 							jsr debugDice							
 key_c					lda KEYCOLS
 							and #16
-							bne key_7	
+							bne key_t	
 				      jsr drawCharScr
-																	
+key_t					lda KEYCOLS
+							and #64
+							bne key_7																									
 key_7					lda #KEYROW_4			; #4
 							sta KEYROWS
 							lda KEYCOLS
@@ -274,13 +275,17 @@ key_9					lda #KEYROW_5		; #5
 							bne key_m																							
 key_m 				lda KEYCOLS
 							and #16
-					    bne +																
+					    bne key_k																
 							;jsr setDirection
 							;jsr getFov
 							jsr initCanvas
 							;jsr drawHorizon
 							jsr drawMap
-							jsr drawPlayer							
+							jsr drawPlayer
+key_k					lda KEYCOLS
+							and #32
+							bne +	
+							jsr drawSkillScr					
 +							jsr printdebugs
 gameloopEnd		jmp gameloop
 							
@@ -441,9 +446,11 @@ py						!byte 9,0,0,0				; player y coordinate
 pd						!byte %10001000			; player direction
 pIco					!byte	ICON_NORTH		; which icon to use for the player on map
 ; attr
+pName					!scr "pizza     "
 pST						!byte 10
 pDX						!byte 11
 pIQ						!byte 12
+
 ; health and mana
 pHP						!byte 50
 pMP						!byte 40
@@ -500,6 +507,7 @@ drawMap				lda #MAPWIDTH
 							sta HIB_SCREEN
 							jsr drawChars
 							jsr drawPlayer
+							jsr clearValues
 							rts
 							
 drawCharScr		lda #20
@@ -526,7 +534,25 @@ drawCharScr		lda #20
 							lda resultstr+1
 							sta SCREEN+$131
 							
-							rts							
+							rts
+							
+drawSkillScr	lda #20
+ 							sta CHARDATA_W
+ 							lda #12
+ 							sta CHARDATA_H
+ 							lda #<datSkillScr
+ 							sta LOB_DATA
+ 							lda #>datSkillScr
+ 							sta HIB_DATA
+ 							lda #<LEFTMENUPOS
+ 							sta LOB_SCREEN
+ 							lda #>LEFTMENUPOS
+ 							sta HIB_SCREEN							
+ 							jsr drawChars
+ 							jsr clearValues
+ 							; print the vars
+ 							
+ 							rts								
 
 ; fov -  directions are pd based
 !zone subsFov
@@ -1235,7 +1261,7 @@ drawChars			ldx #0							; x = 0 for our row number
 							bne --
 							rts		
 
-!zone subsCanvas								; single routines for drawing walls, floor and ceiling
+!zone subsCanvas
 drawW3				lda #6
 							sta CHARDATA_W
 							lda #3
@@ -1724,7 +1750,7 @@ printScrText	ldy #0
 							jmp -
 +							rts
 						
-!zone subsClearing						
+!zone subsClearing
 clearScreen		lda #147
 							jsr PRINT
 							rts
@@ -1742,7 +1768,7 @@ clearValues		lda #$30
 							sta result+1
 							sta result+2
 							rts							
-!zone subsMath							
+!zone subsMath
 printdec			jsr hex2dec			
         			ldx #9
 l1      			lda result,x
@@ -1803,7 +1829,7 @@ map						!byte W,W,W,W,W,W,S,W,W,W,W,W,W,W,W,W,W,W,W,W
 							!byte W,S,S,S,S,S,S,S,S,S,S,S,S,S,S,S,S,S,S,W
 							!byte W,S,S,S,S,S,S,S,S,S,S,S,S,S,S,S,S,S,S,W
 							!byte W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W
-!zone dataUi												
+!zone dataUi
 datUi				!media "assets\uiMc.charscreen",char,0,0,40,25
 datUiC			!media "assets\uiMc.charscreen",color,0,0,40,25	
 						
@@ -1842,15 +1868,33 @@ datE3C			!media "assets\dungeon0mc.charscreen",color,12,15,6,3
 spriteSword 	!media "assets\weapons.spriteproject",sprite,0,2
 spriteAxe			!media "assets\weapons.spriteproject",sprite,2,2
 spriteBow			!media "assets\weapons.spriteproject",sprite,4,4
-
-datCharScr !byte $20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$01,$14,$14,$12,$20,$20,$20,$20,$13,$0b,$09,$0c,$0c,$13,$20,$20,$20,$20,$20
-!byte $20,$27,$27,$27,$27,$27,$27,$27,$20,$27,$27,$27,$27,$27,$27,$27,$27,$27,$27,$20,$20,$0c,$16,$0c,$20,$20,$20,$20,$20,$02,$0c,$01,$04,$05,$13,$20,$20,$20,$20,$20
-!byte $20,$13,$14,$20,$20,$20,$20,$20,$20,$01,$18,$05,$20,$20,$20,$20,$20,$20,$20,$20,$20,$04,$18,$20,$20,$20,$20,$20,$20,$02,$0f,$17,$20,$20,$20,$20,$20,$20,$20,$20
-!byte $20,$09,$11,$20,$20,$20,$20,$20,$20,$0d,$01,$03,$05,$20,$20,$20,$20,$20,$20,$20,$20,$08,$10,$20,$20,$20,$20,$20,$20,$01,$12,$03,$01,$0e,$05,$20,$20,$20,$20,$20
-!byte $20,$0d,$10,$20,$20,$20,$20,$20,$20,$06,$09,$12,$05,$20,$20,$20,$20,$20,$20,$20,$20,$01,$03,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20
-!byte $20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20
-
-
+!zone dataText
+datCharScr  !scr "                    "
+						!scr " name               "
+						!scr " '''''''''''''''''' "
+						!scr " lvl      xp        "
+						!scr " st                 "
+						!scr " dx                 "
+						!scr " iq                 "
+						!scr " iq                 "
+						!scr " hp                 "
+						!scr " mp                 "
+						!scr " ac                 "
+						!scr "                    "
+						
+datSkillScr !scr "                    "
+						!scr " skills             "
+						!scr " '''''''''''''''''' "
+						!scr " blades             "
+						!scr "                    "
+						!scr "                    "
+						!scr "                    "
+						!scr "                    "
+						!scr "                    "
+						!scr "                    "
+						!scr "                    "
+						!scr "                    "
+					
 !zone subsExternal
 !source "_includes\sound.asm"
 !source "_includes\dice.asm"
