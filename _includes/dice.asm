@@ -96,13 +96,26 @@ getSL			  ldy #2					 			; first we load the attribute value for the skill
 						sta (LOB_SKILLPTR),y ; and write back the SL					
 						
 +
-+++					rts											
-						
-newSeed 		lda SEED
-        		beq doEor 			;added this
-        		asl
-        		bcc noEor
-doEor   		eor #$1d
-noEor   		sta SEED
++++					rts
+
+attack			clc
+						ldy #0
+						lda (LOB_SKILLPTR),y
+						cmp SUCCESSROLL
+						bcs +
+						beq +
+						clc
 						rts
++						sec						
+						rts
+						
+						
+						
+; newSeed 			lda SEED
+;         			beq doEor 			;added this
+;         			asl
+;         			bcc noEor
+; doEor   			eor #$1d
+; noEor   			sta SEED
+; 						  rts
 				

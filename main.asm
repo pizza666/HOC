@@ -184,7 +184,35 @@ key_1					sta KEYROWS
 							
 key_2					lda KEYCOLS
 							and #8
+							bne key_space
+							
+key_space			lda KEYCOLS
+							and #16
 							bne key_Q		
+							jsr rollSuccess
+							jsr debugSuccessRoll
+							lda #<psSwords
+							sta LOB_SKILLPTR
+							lda #>psSwords
+							sta HIB_SKILLPTR
+							jsr attack
+							bcs +
+							lda #<strMiss
+							sta LOB_TXTPTR
+							lda #>strMiss
+							sta HIB_TXTPTR
+							jmp ++
++							lda #<strHit
+							sta LOB_TXTPTR
+							lda #>strHit
+							sta HIB_TXTPTR
+++						lda #<(SCREEN+$2aa)
+							sta LOB_SCREEN
+							LDA #>(SCREEN+$2aa)
+							sta HIB_SCREEN
+							jsr printScrText
+							
+							jsr clearValues
 							
 key_Q					lda KEYCOLS
 							and #64			
@@ -1975,6 +2003,8 @@ datSkillScr !scr "                    "
 						!scr "                    "
 						!scr "                    "
 						!scr "                    "
+strHit			!scr "hit",0
+strMiss			!scr "miss",0
 					
 !zone subsExternal
 !source "_includes\sound.asm"
