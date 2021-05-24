@@ -16,13 +16,22 @@ CHARDATA_H			= $fb   ; data hight in ZP
 SEED						= $02
 SUCCESSROLL 		= $05
 LASTD6					= $06
+LOB_SKILLPTR	  = $17
+HIB_SKILLPTR		= $18
+
+; math
+COUNT						= $52
 
 ; text/strings
 LOB_TXTPTR			= $03
 HIB_TXTPTR			= $04
 
-
 !zone consts
+; attributes
+STR 						= 1
+DEX 						= 2
+INT 						= 3	
+	
 ; ui const
 UIWIDTH					= 40
 UIHIGHT					= 25
@@ -275,7 +284,13 @@ key_9					lda #KEYROW_5		; #5
 							lda KEYCOLS
 							and #1
 							bne key_m	
-							inc psSwords
+							inc psSwords+1
+							lda #<psSwords
+							sta LOB_SKILLPTR
+							lda #>psSwords
+							sta HIB_SKILLPTR
+							jsr getSL
+							jsr drawSkillScr
 key_m 				lda KEYCOLS
 							and #16
 					    bne key_k																
@@ -288,6 +303,11 @@ key_m 				lda KEYCOLS
 key_k					lda KEYCOLS
 							and #32
 							bne +	
+							lda #<psSwords
+							sta LOB_SKILLPTR
+							lda #>psSwords
+							sta HIB_SKILLPTR
+							jsr getSL
 							jsr drawSkillScr					
 +							jsr printdebugs
 gameloopEnd		jmp gameloop
@@ -461,14 +481,16 @@ pIco					!byte	ICON_NORTH		; which icon to use for the player on map
 ; attr
 pLvl					!byte 1
 pName					!scr "pizza     "
-pST						!byte 10
-pDX						!byte 11
-pIQ						!byte 12
-; health and mana
+pSTR				  !byte 10
+pDEX				  !byte 10
+pINT					!byte 10
+; armor, health and mana
+pAC						!byte 0
 pHP						!byte 50
 pMP						!byte 40
-; skills
-psSwords 			!byte 0
+
+; skills 						SL,Pts,Atr
+psSwords 			!byte 0, 0,	 DEX
 
 !zone inputRoutines
 dx						!byte 250,0
@@ -542,7 +564,7 @@ drawCharScr		lda #20
 							; print the vars
 							jsr clearValues
 							
-							lda pLvl						; print ST
+							lda pLvl							; print LVL
 							sta value
 							jsr printdec
 							lda resultstr
@@ -550,7 +572,7 @@ drawCharScr		lda #20
 							lda resultstr+1
 							sta LEFTMENUPOS+126
 
-							lda pST							; print ST
+							lda pSTR							; print STR
 							sta value
 							jsr printdec
 							lda resultstr
@@ -558,7 +580,7 @@ drawCharScr		lda #20
 							lda resultstr+1
 							sta LEFTMENUPOS+166
 
-							lda pDX							; print DX
+							lda pDEX							; print DEX
 							sta value
 							jsr printdec
 							lda resultstr
@@ -566,7 +588,7 @@ drawCharScr		lda #20
 							lda resultstr+1
 							sta LEFTMENUPOS+206
 							
-							lda pIQ							; print IQ
+							lda pINT							; print INT
 							sta value
 							jsr printdec
 							lda resultstr
@@ -593,13 +615,23 @@ drawSkillScr	lda #20
  							
 							; print the vars
 							jsr clearValues
-							lda psSwords
+							lda psSwords+1				; skill Pts
 							sta value
 							jsr printdec
 							lda resultstr
 							sta LEFTMENUPOS+138
 							lda resultstr+1
 							sta LEFTMENUPOS+137
+							
+							; print the vars
+							jsr clearValues
+							lda psSwords					; skill SL
+							sta value
+							jsr printdec
+							lda resultstr
+							sta LEFTMENUPOS+135
+							lda resultstr+1
+							sta LEFTMENUPOS+134
  							
  							rts								
 
@@ -1860,7 +1892,7 @@ skip       	  rol value
 
 value   		!byte 0,0,0,0
 result  		!byte 0,0,0,0,0,0,0,0,0,0
-resultstr		!byte S_0,S_0,S_0,S_0,S_0,S_0,S_0,S_0,S_0,S_0			
+resultstr		!scr "0000000000"					
 
 !zone dataMaps
 	  					!byte W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W	
