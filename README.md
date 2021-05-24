@@ -21,6 +21,7 @@ Use C64 Studio by Georg Rottensteiner to build/compile/debug
 * 6: Roll d6
 * M: Open Map
 * C: Open character screen
+* K: Open skills screen
 
 ## Working Features
 
