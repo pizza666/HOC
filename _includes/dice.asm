@@ -90,7 +90,7 @@ getSL			  ldy #2					 			; first we load the attribute value for the skill
 -						lsr
 						lsr								; divide by 4 (2x log. shift right)
 						clc
-						adc COUNT							
+						adc COUNT					; for each 4 Pts we now get 1 attitional SL				
 						
 						dey
 						sta (LOB_SKILLPTR),y ; and write back the SL					

@@ -1,4 +1,4 @@
-!source "_includes\system_const.asm"
+﻿!source "_includes\system_const.asm"
 !source "_includes\const_scrcodes.asm"
 *=$801
 !basic main
@@ -30,8 +30,11 @@ HIB_TXTPTR			= $04
 ; attributes
 STR 						= 1
 DEX 						= 2
-INT 						= 3	
-	
+INT 						= 3
+
+; items
+ITEMICON				= 240
+
 ; ui const
 UIWIDTH					= 40
 UIHIGHT					= 25
@@ -47,7 +50,7 @@ LEFTMENUCOLOR		= SCREENCOLOR+LMOFFSET
 MAPWIDTH				= 20
 MAPHIGHT				= 12
 W							  = 175				;normal wall
-S								= 35				;normal floor/sky (space)		
+S								= 35				;normal floor/sky (space)
 MAPPOS 					= LEFTMENUPOS
 MAPCOLOR				= LEFTMENUCOLOR
 NORTH						= %10001000 ; $88 - 136
@@ -138,7 +141,7 @@ main
 									jsr clearScreen
 
 									lda #$18									; use charset at $2000
-									sta VIC_MEMSETUP	
+									sta VIC_MEMSETUP
 									; activate multicolor
 									lda #16
 									ora $d016
@@ -147,48 +150,48 @@ main
 						  		sta $d022
 									lda #15
 									sta $d023
-									
+
 									jsr genSeed
 									jsr drawUi
 									jsr getFov
 									jsr initCanvas
-								
+
 !zone initSprites
-	
+
  									lda #3
  									sta VIC_SPRITEACTIVE
  									lda #3
  									sta VIC_SPRITEMULTICOLOR
-	
+
 									jsr loadSword
 
-!zone gameloop							
+!zone gameloop
 gameloop									; start the game loop
-wait 					lda #43
-wait1					cmp $d012
-							bne wait1
-							;inc $d020
-							ldx #0
-wait2 				inx
-							bne wait2
-							;dec $d020
-							; TODO refactor the key loop with lsr maybe								
-						
+;wait 					lda #43
+;wait1					cmp $d012;
+;							bne wait1
+;							inc $d020
+;							ldx #0
+;wait2 				inx
+;							bne wait2
+;							dec $d020
+							; TODO refactor the key loop with lsr maybe
+
 !zone inputLoops
 
 							lda #KEYROW_8				; #8
 key_1					sta KEYROWS
 							lda KEYCOLS
 							and #1
-							bne key_2					
-							
+							bne key_2
+
 key_2					lda KEYCOLS
 							and #8
 							bne key_space
-							
+
 key_space			lda KEYCOLS
 							and #16
-							bne key_Q		
+							bne key_Q
 							jsr rollSuccess
 							jsr debugSuccessRoll
 							lda #<psSwords
@@ -211,11 +214,20 @@ key_space			lda KEYCOLS
 							LDA #>(SCREEN+$2aa)
 							sta HIB_SCREEN
 							jsr printScrText
-							
+
 							jsr clearValues
-							
+
+							lda #13
+							sta SPRITEPOINTER1
+							ldx #254
+-							dex
+
+							bne -
+							lda #14
+							sta SPRITEPOINTER1
+
 key_Q					lda KEYCOLS
-							and #64			
+							and #64
 							bne key_3
 							lda pd		; rotate player left
 							asl
@@ -223,14 +235,14 @@ key_Q					lda KEYCOLS
 							jsr setDirection
 							jsr getFov
 							jsr drawHorizon
-							jsr initCanvas											
+							jsr initCanvas
 key_3					lda #KEYROW_2				; #2
 							sta KEYROWS
 							lda KEYCOLS
 							and #1
-							bne key_W	
-							jsr loadAxe				
-							
+							bne key_W
+							jsr loadAxe
+
 key_W					lda KEYCOLS
 							and #2
 							bne key_A
@@ -240,22 +252,22 @@ key_W					lda KEYCOLS
 							jsr getFov
 							jsr drawHorizon
 							jsr initCanvas
-							jsr stopSidV1			
+							jsr stopSidV1
 key_A					lda KEYCOLS
 							and #4
 							bne key_4
 							jsr initCanvas
-							jsr movePlayerW				
+							jsr movePlayerW
 key_4					lda KEYCOLS
 							and #8
-							bne key_S						
-							jsr loadSword	
-							
-key_S					lda #KEYROW_2	
+							bne key_S
+							jsr loadSword
+
+key_S					lda #KEYROW_2
 							sta KEYROWS
 							lda KEYCOLS
 							and #32
-							bne key_E							
+							bne key_E
 							jsr playSfx
 							jsr movePlayerB
 							jsr setDirection
@@ -264,14 +276,14 @@ key_S					lda #KEYROW_2
 							jsr initCanvas
 							jsr stopSidV1
 key_E					lda KEYCOLS
-							and #64			
+							and #64
 							bne key_5
 							lda pd	; rotate player right
 							lsr
 							ror pd
 							jsr setDirection
 							jsr getFov
-							jsr initCanvas		
+							jsr initCanvas
 key_5					lda #KEYROW_3			; # 3
 							sta KEYROWS
 							lda KEYCOLS
@@ -286,10 +298,10 @@ key_D					lda KEYCOLS
 key_6					lda KEYCOLS
 							and #8
 							bne key_c
-							jsr debugDice							
+							jsr debugDice
 key_c					lda KEYCOLS
 							and #16
-							bne key_t	
+							bne key_t
 				      jsr drawCharScr
 key_t					lda KEYCOLS
 							and #64
@@ -298,20 +310,20 @@ key_7					lda #KEYROW_4			; #4
 							sta KEYROWS
 							lda KEYCOLS
 							and #1
-							bne key_8				
-							jsr debugSuccessRoll		
+							bne key_8
+							jsr debugSuccessRoll
 key_8					lda KEYCOLS
 							and #8
-							bne key_B						
+							bne key_B
 							jsr initCanvas
 key_B					lda KEYCOLS
 							and #16
-							bne key_9																	
+							bne key_9
 key_9					lda #KEYROW_5		; #5
 							sta KEYROWS
 							lda KEYCOLS
 							and #1
-							bne key_m	
+							bne key_i
 							inc psSwords+1
 							lda #<psSwords
 							sta LOB_SKILLPTR
@@ -319,35 +331,39 @@ key_9					lda #KEYROW_5		; #5
 							sta HIB_SKILLPTR
 							jsr getSL
 							jsr drawSkillScr
+key_i					lda KEYCOLS
+							and #2
+							bne key_m
+							jsr drawIvenScr
 key_m 				lda KEYCOLS
 							and #16
-					    bne key_k																
+					    bne key_k
 							;jsr setDirection
 							;jsr getFov
-							jsr initCanvas
+							;jsr initCanvas
 							;jsr drawHorizon
 							jsr drawMap
 							jsr drawPlayer
 key_k					lda KEYCOLS
 							and #32
-							bne +	
+							bne +
 							lda #<psSwords
 							sta LOB_SKILLPTR
 							lda #>psSwords
 							sta HIB_SKILLPTR
 							jsr getSL
-							jsr drawSkillScr					
+							jsr drawSkillScr
 +							jsr printdebugs
 gameloopEnd		jmp gameloop
-							
-						
-!zone debug							
-printdebugs		jsr clearValues						
-							
+
+
+!zone debug
+printdebugs		jsr clearValues
+
 							lda px						; player x debug
 							sta value
 							jsr printdec
-							lda resultstr								
+							lda resultstr
 							sta DEBUGPOS+3
 							lda resultstr+1
 							sta DEBUGPOS+2
@@ -355,13 +371,13 @@ printdebugs		jsr clearValues
 							sta DEBUGPOS+1
 							lda #S_X
 							sta DEBUGPOS
-						
+
 							jsr clearValues
 
 							lda py					  ; player y debug
 							sta value
 							jsr printdec
-							lda resultstr								
+							lda resultstr
 							sta DEBUGPOS+8
 							lda resultstr+1
 							sta DEBUGPOS+7
@@ -369,13 +385,13 @@ printdebugs		jsr clearValues
 							sta DEBUGPOS+6
 							lda #S_Y
 							sta DEBUGPOS+5
-							
-							jsr clearValues						
-							
+
+							jsr clearValues
+
 							lda pd						; player direction debug
 							sta value
 							jsr printdec
-							lda resultstr								
+							lda resultstr
 							sta DEBUGPOS+13
 							lda resultstr+1
 							sta DEBUGPOS+12
@@ -383,11 +399,11 @@ printdebugs		jsr clearValues
 							sta DEBUGPOS+11
 							lda #S_D
 							sta DEBUGPOS+10
-							rts	
+							rts
 
 debugDice			jsr clearValues
 
-							jsr rollD6			
+							jsr rollD6
 							lda LASTD6
 							sta value
 							jsr printdec
@@ -395,7 +411,7 @@ debugDice			jsr clearValues
 							sta DEBUGPOS+16
 							lda resultstr+1
 							sta DEBUGPOS+15
-						
+
 							lda LASTD6
 							cmp #1
 							bne +
@@ -407,12 +423,12 @@ debugDice			jsr clearValues
 							sta DEBUGPOS+20
 							lda resultstr+1
 							sta DEBUGPOS+19
-							jsr clearValues															
-							
+							jsr clearValues
+
 +							lda LASTD6
 							cmp #2
 							bne +
-							inc d6_2	
+							inc d6_2
 							lda d6_2
 							sta value
 							jsr printdec
@@ -421,11 +437,11 @@ debugDice			jsr clearValues
 							lda resultstr+1
 							sta DEBUGPOS+22
 							jsr clearValues
-							
+
 +							lda LASTD6
 							cmp #3
 							bne +
-							inc d6_3	
+							inc d6_3
 							lda d6_3
 							sta value
 							jsr printdec
@@ -433,12 +449,12 @@ debugDice			jsr clearValues
 							sta DEBUGPOS+26
 							lda resultstr+1
 							sta DEBUGPOS+25
-						  jsr clearValues	
+						  jsr clearValues
 
 +							lda LASTD6
 							cmp #4
 							bne +
-							inc d6_4	
+							inc d6_4
 							lda d6_4
 							sta value
 							jsr printdec
@@ -446,7 +462,7 @@ debugDice			jsr clearValues
 							sta DEBUGPOS+29
 							lda resultstr+1
 							sta DEBUGPOS+28
-						  jsr clearValues					
+						  jsr clearValues
 
 +							lda LASTD6
 							cmp #5
@@ -459,12 +475,12 @@ debugDice			jsr clearValues
 							sta DEBUGPOS+32
 							lda resultstr+1
 							sta DEBUGPOS+31
-						  jsr clearValues	
-							
+						  jsr clearValues
+
 +							lda LASTD6
 							cmp #6
 							bne +
-							inc d6_6	
+							inc d6_6
 							lda d6_6
 							sta value
 							jsr printdec
@@ -475,7 +491,7 @@ debugDice			jsr clearValues
 						  jsr clearValues
 
 
-+							inc dCount	
++							inc dCount
 							lda dCount
 							sta value
 							jsr printdec
@@ -483,13 +499,13 @@ debugDice			jsr clearValues
 							sta DEBUGPOS+38
 							lda resultstr+1
 							sta DEBUGPOS+37
-						  jsr clearValues							
-							
+						  jsr clearValues
+
 +							jsr clearValues
 							rts
 
 debugSuccessRoll	jsr clearValues
-									jsr rollSuccess			
+									jsr rollSuccess
 									lda SUCCESSROLL
 									sta value
 									jsr printdec
@@ -497,8 +513,8 @@ debugSuccessRoll	jsr clearValues
 									sta DEBUGPOS+16
 									lda resultstr+1
 									sta DEBUGPOS+15
-									rts							
-						
+									rts
+
 
 !zone varsPlayer
 ; pos and direction on map
@@ -516,6 +532,8 @@ pINT					!byte 10
 pAC						!byte 0
 pHP						!byte 50
 pMP						!byte 40
+; inventory
+weapon				!byte 0
 
 ; skills 						SL,Pts,Atr
 psSwords 			!byte 0, 0,	 DEX
@@ -523,14 +541,14 @@ psSwords 			!byte 0, 0,	 DEX
 !zone inputRoutines
 dx						!byte 250,0
 dy						!byte 100
-fire0 				!byte 0							
+fire0 				!byte 0
 
 getJoy2				;lda $dc00
-         			;sta $02			 	
+         			;sta $02
 up       			lda #%00000001
          			bit $dc00
-         			bne down      	
-         			dec dy		
+         			bne down
+         			dec dy
 down     			lda #%00000010
 				 			bit $dc00
          			bne left
@@ -550,7 +568,7 @@ right    			lda #%00001000
 				 			bne fire
 				 			lda #1
 				 			eor $d010
-				 			sta $d010				
+				 			sta $d010
 fire 		 			lda #%00010000
          			bit $dc00
          			bne end
@@ -574,7 +592,7 @@ drawMap				lda #MAPWIDTH
 							jsr drawPlayer
 							jsr clearValues
 							rts
-							
+
 drawCharScr		lda #20
 							sta CHARDATA_W
 							lda #12
@@ -586,12 +604,12 @@ drawCharScr		lda #20
 							lda #<LEFTMENUPOS
 							sta LOB_SCREEN
 							lda #>LEFTMENUPOS
-							sta HIB_SCREEN							
+							sta HIB_SCREEN
 							jsr drawChars
-							
+
 							; print the vars
 							jsr clearValues
-							
+
 							lda pLvl							; print LVL
 							sta value
 							jsr printdec
@@ -615,7 +633,7 @@ drawCharScr		lda #20
 							sta LEFTMENUPOS+207
 							lda resultstr+1
 							sta LEFTMENUPOS+206
-							
+
 							lda pINT							; print INT
 							sta value
 							jsr printdec
@@ -623,9 +641,9 @@ drawCharScr		lda #20
 							sta LEFTMENUPOS+247
 							lda resultstr+1
 							sta LEFTMENUPOS+246
-							
+
 							rts
-							
+
 drawSkillScr	lda #20
  							sta CHARDATA_W
  							lda #12
@@ -637,10 +655,10 @@ drawSkillScr	lda #20
  							lda #<LEFTMENUPOS
  							sta LOB_SCREEN
  							lda #>LEFTMENUPOS
- 							sta HIB_SCREEN							
+ 							sta HIB_SCREEN
  							jsr drawChars
  							jsr clearValues
- 							
+
 							; print the vars
 							jsr clearValues
 							lda psSwords+1				; skill Pts
@@ -650,7 +668,7 @@ drawSkillScr	lda #20
 							sta LEFTMENUPOS+138
 							lda resultstr+1
 							sta LEFTMENUPOS+137
-							
+
 							; print the vars
 							jsr clearValues
 							lda psSwords					; skill SL
@@ -660,12 +678,29 @@ drawSkillScr	lda #20
 							sta LEFTMENUPOS+135
 							lda resultstr+1
 							sta LEFTMENUPOS+134
- 							
- 							rts								
+
+ 							rts
+
+drawIvenScr		lda #20
+ 							sta CHARDATA_W
+ 							lda #12
+ 							sta CHARDATA_H
+ 							lda #<datInvenScr
+ 							sta LOB_DATA
+ 							lda #>datInvenScr
+ 							sta HIB_DATA
+ 							lda #<LEFTMENUPOS
+ 							sta LOB_SCREEN
+ 							lda #>LEFTMENUPOS
+ 							sta HIB_SCREEN
+ 							jsr drawChars
+ 							jsr clearValues
+
+							rts
 
 ; fov -  directions are pd based
 !zone subsFov
-						
+
 getFov				lda pd					; get direction and jsr the correct direction FOV routine
 							cmp #NORTH
 							bne +
@@ -681,7 +716,7 @@ getFov				lda pd					; get direction and jsr the correct direction FOV routine
 +							lda pd
 							cmp #WEST
 							bne +
-							jsr getFovWest					
+							jsr getFovWest
 +							rts
 
 getFovNorth		lda #<map						; 		E3 N3 E3
@@ -690,11 +725,11 @@ getFovNorth		lda #<map						; 		E3 N3 E3
 							sta HIB_DATA				;     E0 PL E0
 							ldy py
 							dey
-							beq +++							; py-1 is 0? were in the first row skip the row loop		
+							beq +++							; py-1 is 0? were in the first row skip the row loop
 							dey
-							beq ++							; py-1 is 0? were in the first row skip the row loop		
+							beq ++							; py-1 is 0? were in the first row skip the row loop
 							dey
-							beq +			
+							beq +
 -							lda LOB_DATA
 							clc
 							adc #MAPWIDTH
@@ -709,15 +744,15 @@ getFovNorth		lda #<map						; 		E3 N3 E3
 							lda (LOB_DATA),y
 							sta n3						; N3
 							sta COMPASSPOS+1
-														
-							ldy px						
-							iny								
+
+							ldy px
+							iny
 							lda (LOB_DATA),y
 							sta e3						; E3
 							sta COMPASSPOS+2
-							
-							ldy px						
-							dey								
+
+							ldy px
+							dey
 							lda (LOB_DATA),y
 							sta w3						; W3
 							sta COMPASSPOS
@@ -734,15 +769,15 @@ getFovNorth		lda #<map						; 		E3 N3 E3
 							lda (LOB_DATA),y
 							sta n2						; N2
 							sta COMPASSPOS+41
-														
-							ldy px						
-							iny								
+
+							ldy px
+							iny
 							lda (LOB_DATA),y
 							sta e2						; E2
 							sta COMPASSPOS+42
-							
-							ldy px						
-							dey								
+
+							ldy px
+							dey
 							lda (LOB_DATA),y
 							sta w2						; W2
 							sta COMPASSPOS+40
@@ -759,15 +794,15 @@ getFovNorth		lda #<map						; 		E3 N3 E3
 							lda (LOB_DATA),y
 							sta n1						; N1
 							sta COMPASSPOS+81
-														
-							ldy px						
-							iny								
+
+							ldy px
+							iny
 							lda (LOB_DATA),y
 							sta e1						; E1
 							sta COMPASSPOS+82
-							
-							ldy px						
-							dey								
+
+							ldy px
+							dey
 							lda (LOB_DATA),y
 							sta w1						; W2
 							sta COMPASSPOS+80
@@ -781,18 +816,18 @@ getFovNorth		lda #<map						; 		E3 N3 E3
 							sta HIB_DATA
 							; row with player
 
-++++ 					ldy px						
-							iny								
+++++ 					ldy px
+							iny
 							lda (LOB_DATA),y
 							sta e0						; E0
 							sta COMPASSPOS+122
-							
-							ldy px						
-							dey								
+
+							ldy px
+							dey
 							lda (LOB_DATA),y
 							sta w0						; W0
 							sta COMPASSPOS+120
-							
+
 							; draw compass directions
 							lda #S_N
 							sta COMPASSNORTH
@@ -802,8 +837,8 @@ getFovNorth		lda #<map						; 		E3 N3 E3
 							sta COMPASSSOUTH
 							lda #S_W
 							sta COMPASSWEST
-							
-							rts							
+
+							rts
 
 
 getFovEast		lda #<map												; 		E3 N3 E3
@@ -812,7 +847,7 @@ getFovEast		lda #<map												; 		E3 N3 E3
 							sta HIB_DATA				;     E0 PL E0
 							ldy py
 							dey
-							beq +									; py-1 is 0? were in the first row skip the row loop						
+							beq +									; py-1 is 0? were in the first row skip the row loop
 -							lda LOB_DATA
 							clc
 							adc #MAPWIDTH
@@ -822,24 +857,24 @@ getFovEast		lda #<map												; 		E3 N3 E3
 							sta HIB_DATA
 							dey
 							bne -
-							; 1 rows in above of the player													
-+							ldy px							; W0								
+							; 1 rows in above of the player
++							ldy px							; W0
 							lda (LOB_DATA),y
 							sta w0
 							sta COMPASSPOS+120
-							iny							
+							iny
 							lda (LOB_DATA),y
 							sta w1
 							sta COMPASSPOS+80
-							iny							
-							lda (LOB_DATA),y							
+							iny
+							lda (LOB_DATA),y
 							sta w2
 							sta COMPASSPOS+40
-							iny							
+							iny
 							lda (LOB_DATA),y
 							sta w3
-							sta COMPASSPOS	
-							
+							sta COMPASSPOS
+
 							; next row
 							lda LOB_DATA
 							clc
@@ -848,22 +883,22 @@ getFovEast		lda #<map												; 		E3 N3 E3
 							lda HIB_DATA
 							adc #0
 							sta HIB_DATA
-							
-							; row with the player											
-							ldy px							; W0								
-							iny							
+
+							; row with the player
+							ldy px							; W0
+							iny
 							lda (LOB_DATA),y
 							sta n1
 							sta COMPASSPOS+81
-							iny							
-							lda (LOB_DATA),y							
+							iny
+							lda (LOB_DATA),y
 							sta n2
 							sta COMPASSPOS+41
-							iny							
+							iny
 							lda (LOB_DATA),y
 							sta n3
-							sta COMPASSPOS+1	
-							
+							sta COMPASSPOS+1
+
 							; next row
 							lda LOB_DATA
 							clc
@@ -872,25 +907,25 @@ getFovEast		lda #<map												; 		E3 N3 E3
 							lda HIB_DATA
 							adc #0
 							sta HIB_DATA
-							
+
 							; row below the player
-							ldy px																						
+							ldy px
 							lda (LOB_DATA),y
 							sta e0
 							sta COMPASSPOS+122
-							iny							
-							lda (LOB_DATA),y							
+							iny
+							lda (LOB_DATA),y
 							sta e1
 							sta COMPASSPOS+82
-							iny							
+							iny
 							lda (LOB_DATA),y
 							sta e2
-							sta COMPASSPOS+42		
-							iny							
+							sta COMPASSPOS+42
+							iny
 							lda (LOB_DATA),y
 							sta e3
 							sta COMPASSPOS+2
-							
+
 							; draw compass directions
 							lda #S_E
 							sta COMPASSNORTH
@@ -900,127 +935,15 @@ getFovEast		lda #<map												; 		E3 N3 E3
 							sta COMPASSSOUTH
 							lda #S_N
 							sta COMPASSWEST
-							
-+++						rts
-							
-							
-getFovSouth		lda #<map						; 		E0 PL W0						
-							sta LOB_DATA				; 		E1 N1	W1			
-							lda #>map						; 		E2 N2	W2		
-							sta HIB_DATA				;     E3 N3 W3
-							ldy py			
--							lda LOB_DATA
-							clc
-							adc #MAPWIDTH
-							sta LOB_DATA
-							lda HIB_DATA
-							adc #0
-							sta HIB_DATA
-							dey						
-							bne -							
-							; row 0 with the player
-++++ 					ldy px							; PL (N0)
-							lda #$13						
-							sta COMPASSNORTH														
-							ldy px							; W0
-							iny								
-							lda (LOB_DATA),y
-							sta w0							
-							sta COMPASSPOS+120							
-							ldy px							; E0					
-							dey								
-							lda (LOB_DATA),y
-							sta e0						
-							sta COMPASSPOS+122
-							; next row
-							lda LOB_DATA
-							clc
-							adc #MAPWIDTH
-							sta LOB_DATA
-							lda HIB_DATA
-							adc #0
-							sta HIB_DATA					
-							; row 1 below the player
-							ldy px							; N1
-							lda (LOB_DATA),y
-							sta COMPASSPOS+81
-							sta n1
 
-							ldy px							; W1				
-							iny								
-							lda (LOB_DATA),y
-							sta w1														
-							sta COMPASSPOS+80		
-							ldy px							; E1
-							dey								
-							lda (LOB_DATA),y
-							sta e1							
-							sta COMPASSPOS+82						
-							; next row
-							lda LOB_DATA
-							clc
-							adc #MAPWIDTH
-							sta LOB_DATA
-							lda HIB_DATA
-							adc #0
-							sta HIB_DATA					
-							; row 2 below the player
-							ldy px							; N2
-							lda (LOB_DATA),y
-							sta COMPASSPOS+41
-							sta n2
-							ldy px							; W2	
-							iny								
-							lda (LOB_DATA),y
-							sta w2														
-							sta COMPASSPOS+40				
-							ldy px							; E2
-							dey								
-							lda (LOB_DATA),y
-							sta e2							
-							sta COMPASSPOS+42			
-							; next row
-							lda LOB_DATA
-							clc
-							adc #MAPWIDTH
-							sta LOB_DATA
-							lda HIB_DATA
-							adc #0
-							sta HIB_DATA					
-							; row 3 below the player
-							ldy px							; N3							
-							lda (LOB_DATA),y
-							sta COMPASSPOS+1
-							sta n3														
-							ldy px							; W3						
-							iny								
-							lda (LOB_DATA),y
-							sta w3														
-							sta COMPASSPOS								
-							ldy px							; E3						
-							dey								
-							lda (LOB_DATA),y
-							sta e3							
-							sta COMPASSPOS+2	
-	
-							; draw compass directions
-							lda #S_S
-							sta COMPASSNORTH
-							lda #S_W
-							sta COMPASSEAST
-							lda #S_N
-							sta COMPASSSOUTH
-							lda #S_E
-							sta COMPASSWEST						
-							rts
-							
-getFovWest		lda #<map																	; 		E3 N3 E3
-							sta LOB_DATA				; 		E2 N2	E2
-							lda #>map						; 		E1 N1	E1
-							sta HIB_DATA				;     E0 PL E0
++++						rts
+
+
+getFovSouth		lda #<map						; 		E0 PL W0
+							sta LOB_DATA				; 		E1 N1	W1
+							lda #>map						; 		E2 N2	W2
+							sta HIB_DATA				;     E3 N3 W3
 							ldy py
-							dey
-							beq +									; py-1 is 0? were in the first row skip the row loop						
 -							lda LOB_DATA
 							clc
 							adc #MAPWIDTH
@@ -1030,25 +953,137 @@ getFovWest		lda #<map																	; 		E3 N3 E3
 							sta HIB_DATA
 							dey
 							bne -
-							
-							; 1 rows in above of the player													
-+							ldy px							; east walls								
+							; row 0 with the player
+++++ 					ldy px							; PL (N0)
+							lda #$13
+							sta COMPASSNORTH
+							ldy px							; W0
+							iny
+							lda (LOB_DATA),y
+							sta w0
+							sta COMPASSPOS+120
+							ldy px							; E0
+							dey
+							lda (LOB_DATA),y
+							sta e0
+							sta COMPASSPOS+122
+							; next row
+							lda LOB_DATA
+							clc
+							adc #MAPWIDTH
+							sta LOB_DATA
+							lda HIB_DATA
+							adc #0
+							sta HIB_DATA
+							; row 1 below the player
+							ldy px							; N1
+							lda (LOB_DATA),y
+							sta COMPASSPOS+81
+							sta n1
+
+							ldy px							; W1
+							iny
+							lda (LOB_DATA),y
+							sta w1
+							sta COMPASSPOS+80
+							ldy px							; E1
+							dey
+							lda (LOB_DATA),y
+							sta e1
+							sta COMPASSPOS+82
+							; next row
+							lda LOB_DATA
+							clc
+							adc #MAPWIDTH
+							sta LOB_DATA
+							lda HIB_DATA
+							adc #0
+							sta HIB_DATA
+							; row 2 below the player
+							ldy px							; N2
+							lda (LOB_DATA),y
+							sta COMPASSPOS+41
+							sta n2
+							ldy px							; W2
+							iny
+							lda (LOB_DATA),y
+							sta w2
+							sta COMPASSPOS+40
+							ldy px							; E2
+							dey
+							lda (LOB_DATA),y
+							sta e2
+							sta COMPASSPOS+42
+							; next row
+							lda LOB_DATA
+							clc
+							adc #MAPWIDTH
+							sta LOB_DATA
+							lda HIB_DATA
+							adc #0
+							sta HIB_DATA
+							; row 3 below the player
+							ldy px							; N3
+							lda (LOB_DATA),y
+							sta COMPASSPOS+1
+							sta n3
+							ldy px							; W3
+							iny
+							lda (LOB_DATA),y
+							sta w3
+							sta COMPASSPOS
+							ldy px							; E3
+							dey
+							lda (LOB_DATA),y
+							sta e3
+							sta COMPASSPOS+2
+
+							; draw compass directions
+							lda #S_S
+							sta COMPASSNORTH
+							lda #S_W
+							sta COMPASSEAST
+							lda #S_N
+							sta COMPASSSOUTH
+							lda #S_E
+							sta COMPASSWEST
+							rts
+
+getFovWest		lda #<map																	; 		E3 N3 E3
+							sta LOB_DATA				; 		E2 N2	E2
+							lda #>map						; 		E1 N1	E1
+							sta HIB_DATA				;     E0 PL E0
+							ldy py
+							dey
+							beq +									; py-1 is 0? were in the first row skip the row loop
+-							lda LOB_DATA
+							clc
+							adc #MAPWIDTH
+							sta LOB_DATA
+							lda HIB_DATA
+							adc #0
+							sta HIB_DATA
+							dey
+							bne -
+
+							; 1 rows in above of the player
++							ldy px							; east walls
 							lda (LOB_DATA),y
 							sta e0
 							sta COMPASSPOS+122
 							dey
 							lda (LOB_DATA),y
 							sta e1
-							sta COMPASSPOS+82	
-							dey							
-							lda (LOB_DATA),y							
+							sta COMPASSPOS+82
+							dey
+							lda (LOB_DATA),y
 							sta e2
-							sta COMPASSPOS+42	
-							dey							
+							sta COMPASSPOS+42
+							dey
 							lda (LOB_DATA),y
 							sta e3
-							sta COMPASSPOS+2	
-							
+							sta COMPASSPOS+2
+
 							; next row
 +							lda LOB_DATA
 							clc
@@ -1056,22 +1091,22 @@ getFovWest		lda #<map																	; 		E3 N3 E3
 							sta LOB_DATA
 							lda HIB_DATA
 							adc #0
-							sta HIB_DATA							
-							
-							ldy px															
-							dey							
+							sta HIB_DATA
+
+							ldy px
+							dey
 							lda (LOB_DATA),y
 							sta n1
 							sta COMPASSPOS+81
-							dey							
-							lda (LOB_DATA),y							
+							dey
+							lda (LOB_DATA),y
 							sta n2
 							sta COMPASSPOS+41
-							dey							
+							dey
 							lda (LOB_DATA),y
 							sta n3
-							sta COMPASSPOS+1	
-							
+							sta COMPASSPOS+1
+
 							; next row
 							lda LOB_DATA
 							clc
@@ -1080,25 +1115,25 @@ getFovWest		lda #<map																	; 		E3 N3 E3
 							lda HIB_DATA
 							adc #0
 							sta HIB_DATA
-							
+
 							; row below the player
-							ldy px																						
+							ldy px
 							lda (LOB_DATA),y
 							sta w0
 							sta COMPASSPOS+120
-							dey							
-							lda (LOB_DATA),y							
+							dey
+							lda (LOB_DATA),y
 							sta w1
 							sta COMPASSPOS+80
-							dey							
+							dey
 							lda (LOB_DATA),y
 							sta w2
-							sta COMPASSPOS+40			
-							dey							
+							sta COMPASSPOS+40
+							dey
 							lda (LOB_DATA),y
 							sta w3
-							sta COMPASSPOS		
-							
+							sta COMPASSPOS
+
 							; draw compass directions
 							lda #S_W
 							sta COMPASSNORTH
@@ -1108,10 +1143,10 @@ getFovWest		lda #<map																	; 		E3 N3 E3
 							sta COMPASSSOUTH
 							lda #S_S
 							sta COMPASSWEST
-					
+
 +++						rts
-					
-							
+
+
 setDirection	lda pd						; sets the player icon based on the pd value
 							cmp #NORTH
 							bne +
@@ -1131,7 +1166,7 @@ setDirection	lda pd						; sets the player icon based on the pd value
 							stx pIco
 +							rts
 
-; these are our FOV registers			
+; these are our FOV registers
 fov
 w3 !byte $20
 e3 !byte $20
@@ -1141,7 +1176,7 @@ e2 !byte $20
 n2 !byte $20
 w1 !byte $20
 e1 !byte $20
-n1 !byte $20	
+n1 !byte $20
 w0 !byte $20
 e0 !byte $20
 
@@ -1160,7 +1195,7 @@ initCanvas		jsr drawHorizon
 							cmp #W
 							bne +
 							jsr drawN3
-							
+
 +							lda w2
 							cmp #W
 							bne +
@@ -1173,7 +1208,7 @@ initCanvas		jsr drawHorizon
 							cmp #W
 							bne +
 							jsr drawN2
-							
+
 +							lda w1
 							cmp #W
 							bne +
@@ -1186,7 +1221,7 @@ initCanvas		jsr drawHorizon
 							cmp #W
 							bne +
 							jsr drawN1
-							
+
 +							lda w0
 							cmp #W
 							bne +
@@ -1194,9 +1229,9 @@ initCanvas		jsr drawHorizon
 +							lda e0
 							cmp #W
 							bne +
-							jsr drawE0												
+							jsr drawE0
 +							rts
-	
+
 !zone subsMovePlayer
 movePlayerF		lda pd							; move player forward in pd (player direction) TODO maybe cycle optimization needed
 							cmp #NORTH
@@ -1210,7 +1245,7 @@ movePlayerF		lda pd							; move player forward in pd (player direction) TODO ma
 							jsr movePlayerS
 +							cmp #WEST
 							bne +
-							jsr movePlayerW						
+							jsr movePlayerW
 +							rts
 
 movePlayerB		lda pd
@@ -1225,10 +1260,10 @@ movePlayerB		lda pd
 							jsr movePlayerN
 +							cmp #WEST
 							bne +
-							jsr movePlayerE						
+							jsr movePlayerE
 +							rts
 
-							
+
 movePlayerE		lda #<map						; get low byte of the map
 							sta LOB_DATA				; store in zpage
 							lda #>map						; same for
@@ -1243,7 +1278,7 @@ movePlayerE		lda #<map						; get low byte of the map
 							adc #0
 							sta HIB_DATA
 							dey
-							bpl -						
+							bpl -
 							ldy px
 							iny
 							lda (LOB_DATA),y
@@ -1266,7 +1301,7 @@ movePlayerW		lda #<map						; get low byte of the map
 							adc #0
 							sta HIB_DATA
 							dey
-							bpl -							
+							bpl -
 							ldy px
 							dey
 							lda (LOB_DATA),y
@@ -1290,7 +1325,7 @@ movePlayerN		lda #<map						; get low byte of the map
 							adc #0
 							sta HIB_DATA
 							dey
-							bne -									
+							bne -
 +							ldy px
 							lda (LOB_DATA),y
 							cmp #W
@@ -1313,30 +1348,30 @@ movePlayerS		lda #<map						; get low byte of the map
 							adc #0
 							sta HIB_DATA
 							dey
-							bpl -					
+							bpl -
 							ldy px
 							lda (LOB_DATA),y
 							cmp #W
 							beq +
 							inc py
-+							rts							
-													
++							rts
+
 drawPlayer		lda #<MAPPOS				; we set our position back to the actuial map position
 							sta LOB_SCREEN			;
 							lda #>MAPPOS				;
 							sta HIB_SCREEN
 
 							ldy py							; we load the player y position
--							lda LOB_SCREEN		
-							clc									
+-							lda LOB_SCREEN
+							clc
 							adc #40							; add 40 ( screen row has 40 chars/bytes)
-							sta LOB_SCREEN							
+							sta LOB_SCREEN
 							lda HIB_SCREEN      ; carry is not clear
  							adc #0              ; we add it to the high byte of the screen
  							sta HIB_SCREEN      ; and store it
 							dey
 							bne -												; at the end we should have the y position in first row
-							ldy px							; now we load x	
+							ldy px							; now we load x
 							lda pIco						; player icon
 							sta (LOB_SCREEN),y
 							rts
@@ -1347,16 +1382,16 @@ drawChars			ldx #0							; x = 0 for our row number
 - 						lda (LOB_DATA),y		; store the data indirect addressed with y
 						  sta (LOB_SCREEN),y  ; in the screen position
 							dey									; decrement y
-							bpl -								; is y still positive branch to -							
-							
+							bpl -								; is y still positive branch to -
+
 							lda LOB_SCREEN			; were done with the row and load the low byte of the screen
 							clc									; clear the carry
 							adc #40							; add 40 ( screen row has 40 chars/bytes)
-							sta LOB_SCREEN							
+							sta LOB_SCREEN
 							lda HIB_SCREEN      ; carry is not clear
  							adc #0              ; we add it to the high byte of the screen
  							sta HIB_SCREEN      ; and store it
-							
+
 							lda LOB_DATA
 							clc
 							adc CHARDATA_W			; next row
@@ -1368,7 +1403,7 @@ drawChars			ldx #0							; x = 0 for our row number
 							inx
 							cpx CHARDATA_H
 							bne --
-							rts		
+							rts
 
 !zone subsCanvas
 drawW3				lda #6
@@ -1376,12 +1411,12 @@ drawW3				lda #6
 							lda #3
 							sta CHARDATA_H
 							lda #<datW3
-							sta LOB_DATA				
-							lda #>datW3					
-							sta HIB_DATA				
-							lda #<W3POS					
-							sta LOB_SCREEN			
-							lda #>W3POS					
+							sta LOB_DATA
+							lda #>datW3
+							sta HIB_DATA
+							lda #<W3POS
+							sta LOB_SCREEN
+							lda #>W3POS
 							sta HIB_SCREEN
 							jsr drawChars
 							lda #6
@@ -1389,27 +1424,27 @@ drawW3				lda #6
 							lda #3
 							sta CHARDATA_H
 							lda #<datW3C
-							sta LOB_DATA				
-							lda #>datW3C										
-							sta HIB_DATA				
-							lda #<W3CPOS										
-							sta LOB_SCREEN			
-							lda #>W3CPOS											
+							sta LOB_DATA
+							lda #>datW3C
+							sta HIB_DATA
+							lda #<W3CPOS
+							sta LOB_SCREEN
+							lda #>W3CPOS
 							sta HIB_SCREEN
 							jsr drawChars
 							rts
-							
+
 drawN3				lda #6
 							sta CHARDATA_W
 							lda #3
 							sta CHARDATA_H
 							lda #<datN3
-							sta LOB_DATA				
-							lda #>datN3					
-							sta HIB_DATA				
-							lda #<N3POS					
-							sta LOB_SCREEN			
-							lda #>N3POS					
+							sta LOB_DATA
+							lda #>datN3
+							sta HIB_DATA
+							lda #<N3POS
+							sta LOB_SCREEN
+							lda #>N3POS
 							sta HIB_SCREEN
 							jsr drawChars
 							lda #6
@@ -1417,27 +1452,27 @@ drawN3				lda #6
 							lda #3
 							sta CHARDATA_H
 							lda #<datN3C
-							sta LOB_DATA				
-							lda #>datN3C									
-							sta HIB_DATA				
-							lda #<N3CPOS									
-							sta LOB_SCREEN			
-							lda #>N3CPOS										
+							sta LOB_DATA
+							lda #>datN3C
+							sta HIB_DATA
+							lda #<N3CPOS
+							sta LOB_SCREEN
+							lda #>N3CPOS
 							sta HIB_SCREEN
 							jsr drawChars
 							rts
-							
+
 drawE3				lda #6
 							sta CHARDATA_W
 							lda #3
 							sta CHARDATA_H
 							lda #<datE3
-							sta LOB_DATA				
-							lda #>datE3					
-							sta HIB_DATA				
-							lda #<E3POS					
-							sta LOB_SCREEN			
-							lda #>E3POS					
+							sta LOB_DATA
+							lda #>datE3
+							sta HIB_DATA
+							lda #<E3POS
+							sta LOB_SCREEN
+							lda #>E3POS
 							sta HIB_SCREEN
 							jsr drawChars
 							lda #6
@@ -1445,27 +1480,27 @@ drawE3				lda #6
 							lda #3
 							sta CHARDATA_H
 							lda #<datE3C
-							sta LOB_DATA				
-							lda #>datE3C								
-							sta HIB_DATA				
-							lda #<E3CPOS								
-							sta LOB_SCREEN			
-							lda #>E3CPOS								
+							sta LOB_DATA
+							lda #>datE3C
+							sta HIB_DATA
+							lda #<E3CPOS
+							sta LOB_SCREEN
+							lda #>E3CPOS
 							sta HIB_SCREEN
 							jsr drawChars
-							rts	
-							
+							rts
+
 drawW2				lda #6
 							sta CHARDATA_W
 							lda #7
 							sta CHARDATA_H
 							lda #<datW2
-							sta LOB_DATA				
-							lda #>datW2					
-							sta HIB_DATA				
-							lda #<W2POS					
-							sta LOB_SCREEN			
-							lda #>W2POS					
+							sta LOB_DATA
+							lda #>datW2
+							sta HIB_DATA
+							lda #<W2POS
+							sta LOB_SCREEN
+							lda #>W2POS
 							sta HIB_SCREEN
 							jsr drawChars
 							lda #6
@@ -1473,27 +1508,27 @@ drawW2				lda #6
 							lda #7
 							sta CHARDATA_H
 							lda #<datW2C
-							sta LOB_DATA				
-							lda #>datW2C						
-							sta HIB_DATA				
-							lda #<W2CPOS						
-							sta LOB_SCREEN			
-							lda #>W2CPOS						
+							sta LOB_DATA
+							lda #>datW2C
+							sta HIB_DATA
+							lda #<W2CPOS
+							sta LOB_SCREEN
+							lda #>W2CPOS
 							sta HIB_SCREEN
 							jsr drawChars
-							rts						
-							
+							rts
+
 drawE2				lda #6
 							sta CHARDATA_W
 							lda #7
 							sta CHARDATA_H
 							lda #<datE2
-							sta LOB_DATA				
-							lda #>datE2					
-							sta HIB_DATA				
-							lda #<E2POS					
-							sta LOB_SCREEN			
-							lda #>E2POS					
+							sta LOB_DATA
+							lda #>datE2
+							sta HIB_DATA
+							lda #<E2POS
+							sta LOB_SCREEN
+							lda #>E2POS
 							sta HIB_SCREEN
 							jsr drawChars
 							lda #6
@@ -1501,55 +1536,55 @@ drawE2				lda #6
 							lda #7
 							sta CHARDATA_H
 							lda #<datE2C
-							sta LOB_DATA				
-							lda #>datE2C							
-							sta HIB_DATA				
-							lda #<E2CPOS							
-							sta LOB_SCREEN			
-							lda #>E2CPOS							
+							sta LOB_DATA
+							lda #>datE2C
+							sta HIB_DATA
+							lda #<E2CPOS
+							sta LOB_SCREEN
+							lda #>E2CPOS
 							sta HIB_SCREEN
 							jsr drawChars
-							rts				
+							rts
 
 drawN2				lda #10
 							sta CHARDATA_W
 							lda #7
 							sta CHARDATA_H
-							lda #<datN2		
-							sta LOB_DATA				
-							lda #>datN2					
-							sta HIB_DATA				
-							lda #<N2POS					
-							sta LOB_SCREEN			
-							lda #>N2POS					
+							lda #<datN2
+							sta LOB_DATA
+							lda #>datN2
+							sta HIB_DATA
+							lda #<N2POS
+							sta LOB_SCREEN
+							lda #>N2POS
 							sta HIB_SCREEN
 							jsr drawChars
 							lda #10
 							sta CHARDATA_W
 							lda #7
 							sta CHARDATA_H
-							lda #<datN2C		
-							sta LOB_DATA				
-							lda #>datN2C								
-							sta HIB_DATA				
-							lda #<N2CPOS								
-							sta LOB_SCREEN			
-							lda #>N2CPOS								
+							lda #<datN2C
+							sta LOB_DATA
+							lda #>datN2C
+							sta HIB_DATA
+							lda #<N2CPOS
+							sta LOB_SCREEN
+							lda #>N2CPOS
 							sta HIB_SCREEN
 							jsr drawChars
-							rts	
-							
+							rts
+
 drawN1				lda #16
 							sta CHARDATA_W
 							lda #13
 							sta CHARDATA_H
 							lda #<datN1
-							sta LOB_DATA				
-							lda #>datN1					
-							sta HIB_DATA				
-							lda #<N1POS					
-							sta LOB_SCREEN			
-							lda #>N1POS					
+							sta LOB_DATA
+							lda #>datN1
+							sta HIB_DATA
+							lda #<N1POS
+							sta LOB_SCREEN
+							lda #>N1POS
 							sta HIB_SCREEN
 							jsr drawChars
 							lda #16
@@ -1557,84 +1592,84 @@ drawN1				lda #16
 							lda #13
 							sta CHARDATA_H
 							lda #<datN1C
-							sta LOB_DATA				
-							lda #>datN1C						
-							sta HIB_DATA				
-							lda #<N1CPOS						
-							sta LOB_SCREEN			
-							lda #>N1CPOS						
+							sta LOB_DATA
+							lda #>datN1C
+							sta HIB_DATA
+							lda #<N1CPOS
+							sta LOB_SCREEN
+							lda #>N1CPOS
 							sta HIB_SCREEN
 							jsr drawChars
-							rts					
+							rts
 
 drawW0				lda #1
 							sta CHARDATA_W
 							lda #15
 							sta CHARDATA_H
 							lda #<datW0
-							sta LOB_DATA				
-							lda #>datW0					
-							sta HIB_DATA				
-							lda #<W0POS					
-							sta LOB_SCREEN			
-							lda #>W0POS					
+							sta LOB_DATA
+							lda #>datW0
+							sta HIB_DATA
+							lda #<W0POS
+							sta LOB_SCREEN
+							lda #>W0POS
 							sta HIB_SCREEN
 							jsr drawChars
 							lda #1
 							sta CHARDATA_W
 							lda #15
 							sta CHARDATA_H
-							lda #<datW0C			
-							sta LOB_DATA				
-							lda #>datW0C						
-							sta HIB_DATA				
-							lda #<W0CPOS						
-							sta LOB_SCREEN			
-							lda #>W0CPOS						
+							lda #<datW0C
+							sta LOB_DATA
+							lda #>datW0C
+							sta HIB_DATA
+							lda #<W0CPOS
+							sta LOB_SCREEN
+							lda #>W0CPOS
 							sta HIB_SCREEN
 							jsr drawChars
-							rts					
-							
+							rts
+
 drawE0				lda #1
 							sta CHARDATA_W
 							lda #15
 							sta CHARDATA_H
-							lda #<datE0					
-							sta LOB_DATA				
-							lda #>datE0					
-							sta HIB_DATA				
-							lda #<E0POS					
-							sta LOB_SCREEN			
-							lda #>E0POS						
+							lda #<datE0
+							sta LOB_DATA
+							lda #>datE0
+							sta HIB_DATA
+							lda #<E0POS
+							sta LOB_SCREEN
+							lda #>E0POS
 							sta HIB_SCREEN
 							jsr drawChars
-							
+
 							lda #1
 							sta CHARDATA_W
 							lda #15
 							sta CHARDATA_H
-							lda #<datE0C					
-							sta LOB_DATA				
-							lda #>datE0C					
-							sta HIB_DATA				
+							lda #<datE0C
+							sta LOB_DATA
+							lda #>datE0C
+							sta HIB_DATA
 							lda #<E0CPOS
-							sta LOB_SCREEN			
+							sta LOB_SCREEN
 							lda #>E0CPOS
 							sta HIB_SCREEN
 							jsr drawChars
-							rts									
+							rts
 
 drawW1				lda #4
 							sta CHARDATA_W
 							lda #13
 							sta CHARDATA_H
 							lda #<datW1
-							sta LOB_DATA				
-							lda #>datW1					
-							sta HIB_DATA				
-							lda #<W1POS					
-							sta LOB_SCREEN			
-							lda #>W1POS					
+							sta LOB_DATA
+							lda #>datW1
+							sta HIB_DATA
+							lda #<W1POS
+							sta LOB_SCREEN
+							lda #>W1POS
 							sta HIB_SCREEN
 							jsr drawChars
 							lda #4
@@ -1642,12 +1677,12 @@ drawW1				lda #4
 							lda #13
 							sta CHARDATA_H
 							lda #<datW1C
-							sta LOB_DATA				
-							lda #>datW1C					
-							sta HIB_DATA				
-							lda #<W1CPOS					
-							sta LOB_SCREEN			
-							lda #>W1CPOS					
+							sta LOB_DATA
+							lda #>datW1C
+							sta HIB_DATA
+							lda #<W1CPOS
+							sta LOB_SCREEN
+							lda #>W1CPOS
 							sta HIB_SCREEN
 							jsr drawChars
 							rts
@@ -1657,12 +1692,12 @@ drawE1				lda #4
 							lda #13
 							sta CHARDATA_H
 							lda #<datE1
-							sta LOB_DATA				
-							lda #>datE1					
-							sta HIB_DATA				
-							lda #<E1POS					
-							sta LOB_SCREEN			
-							lda #>E1POS					
+							sta LOB_DATA
+							lda #>datE1
+							sta HIB_DATA
+							lda #<E1POS
+							sta LOB_SCREEN
+							lda #>E1POS
 							sta HIB_SCREEN
 							jsr drawChars
 							lda #4
@@ -1670,27 +1705,27 @@ drawE1				lda #4
 							lda #13
 							sta CHARDATA_H
 							lda #<datE1C
-							sta LOB_DATA				
-							lda #>datE1C						
-							sta HIB_DATA				
-							lda #<E1CPOS						
-							sta LOB_SCREEN			
-							lda #>E1CPOS						
+							sta LOB_DATA
+							lda #>datE1C
+							sta HIB_DATA
+							lda #<E1CPOS
+							sta LOB_SCREEN
+							lda #>E1CPOS
 							sta HIB_SCREEN
 							jsr drawChars
-							rts																						
-							
+							rts
+
 drawHorizon		lda #18
 							sta CHARDATA_W
 							lda #15
 							sta CHARDATA_H
 							lda #<datHorizon
-							sta LOB_DATA				
-							lda #>datHorizon					
-							sta HIB_DATA				
-							lda #<HORIZONPOS					
-							sta LOB_SCREEN			
-							lda #>HORIZONPOS					
+							sta LOB_DATA
+							lda #>datHorizon
+							sta HIB_DATA
+							lda #<HORIZONPOS
+							sta LOB_SCREEN
+							lda #>HORIZONPOS
 							sta HIB_SCREEN
 							jsr drawChars
 							lda #18
@@ -1698,30 +1733,30 @@ drawHorizon		lda #18
 							lda #15
 							sta CHARDATA_H
 							lda #<datHorizonC
-							sta LOB_DATA				
-							lda #>datHorizonC					
-							sta HIB_DATA				
-							lda #<HORIZONCPOS					
-							sta LOB_SCREEN			
-							lda #>HORIZONCPOS					
+							sta LOB_DATA
+							lda #>datHorizonC
+							sta HIB_DATA
+							lda #<HORIZONCPOS
+							sta LOB_SCREEN
+							lda #>HORIZONCPOS
 							sta HIB_SCREEN
 							jsr drawChars
-							rts					
-							
+							rts
+
 
 !zone subsSprites
 
 loadWeaponSprite	ldy #192
 									dey
 -									lda (LOB_DATA),y
- 									sta (LOB_SCREEN),y								
- 									dey		
- 									bne -	
+ 									sta (LOB_SCREEN),y
+ 									dey
+ 									bne -
 									lda #1
-									sta VIC_SPRITEMULTICOLOR0									
+									sta VIC_SPRITEMULTICOLOR0
  									lda #15
 									sta VIC_SPRITEMULTICOLOR1
-								 	ldy #64	
+								 	ldy #64
 									rts
 
 activateSprite0 	stx VIC_SPRITE0COLOR
@@ -1733,7 +1768,7 @@ activateSprite0 	stx VIC_SPRITE0COLOR
 									ora #%00000001
 									sta VIC_SPRITEDOUBLEHEIGHT
 									rts
-									
+
 activateSprite1 	stx VIC_SPRITE1COLOR
  									lda #WPNSPRTX
  									sta VIC_SPRITE1X
@@ -1742,7 +1777,7 @@ activateSprite1 	stx VIC_SPRITE1COLOR
 									lda VIC_SPRITEDOUBLEHEIGHT
 									ora #%00000010
 									sta VIC_SPRITEDOUBLEHEIGHT
-									rts									
+									rts
 
 activateSprite2 	stx VIC_SPRITE2COLOR
  									lda #70
@@ -1755,9 +1790,9 @@ activateSprite2 	stx VIC_SPRITE2COLOR
 									lda VIC_SPRITEDOUBLEWIDTH
 									ora #%00000100
 									sta VIC_SPRITEDOUBLEWIDTH
-									rts						
-											
-									
+									rts
+
+
 loadSword					lda #<spriteSword
 									sta LOB_DATA
 									lda #>spriteSword
@@ -1766,16 +1801,16 @@ loadSword					lda #<spriteSword
 									sta LOB_SCREEN
 									lda #>SPR_RAM
 									sta HIB_SCREEN
-									ldx #COLOR_GREY	
-									jsr activateSprite1			
+									ldx #COLOR_GREY
+									jsr activateSprite1
 									jsr loadWeaponSprite
-									
+
 									lda #13
  									sta SPRITEPOINTER1
 									lda #%10
 									sta VIC_SPRITEACTIVE
 									rts
-									
+
 loadAxe						lda #<spriteAxe
 									sta LOB_DATA
 									lda #>spriteAxe
@@ -1786,14 +1821,14 @@ loadAxe						lda #<spriteAxe
 									sta HIB_SCREEN
 									jsr loadWeaponSprite
 									ldx #COLOR_BROWN
-									jsr activateSprite1									
+									jsr activateSprite1
 									lda #13
  									sta SPRITEPOINTER1
 									lda #%10
 									sta VIC_SPRITEACTIVE
-									
-									rts	
-									
+
+									rts
+
 loadBow						lda #<spriteBow
 									sta LOB_DATA
 									lda #>spriteBow
@@ -1805,19 +1840,19 @@ loadBow						lda #<spriteBow
 									jsr loadWeaponSprite
 									ldx #COLOR_BROWN
 									jsr activateSprite1
-									ldx #COLOR_PINK	
+									ldx #COLOR_PINK
 									jsr activateSprite0
-									
+
 									lda #15
  									sta SPRITEPOINTER0
 									lda #13
  									sta SPRITEPOINTER1
-									
+
 									lda #%11
 									sta VIC_SPRITEACTIVE
-									
-									rts	
-									
+
+									rts
+
 
 !zone subsUi
 
@@ -1826,12 +1861,12 @@ drawUi				lda #40
 							lda #25
 							sta CHARDATA_H
 							lda #<datUi				; UI chars
-							sta LOB_DATA				
-							lda #>datUi					
-							sta HIB_DATA				
-							lda #<UIPOS					
-							sta LOB_SCREEN			
-							lda #>UIPOS					
+							sta LOB_DATA
+							lda #>datUi
+							sta HIB_DATA
+							lda #<UIPOS
+							sta LOB_SCREEN
+							lda #>UIPOS
 							sta HIB_SCREEN
 							jsr drawChars
 							lda #40
@@ -1839,12 +1874,12 @@ drawUi				lda #40
 							lda #25
 							sta CHARDATA_H
 							lda #<datUiC				; UI color
-							sta LOB_DATA				
-							lda #>datUiC					
-							sta HIB_DATA				
-							lda #<UICPOS					
-							sta LOB_SCREEN			
-							lda #>UICPOS					
+							sta LOB_DATA
+							lda #>datUiC
+							sta HIB_DATA
+							lda #<UICPOS
+							sta LOB_SCREEN
+							lda #>UICPOS
 							sta HIB_SCREEN
 							jsr drawChars
 							rts
@@ -1858,12 +1893,12 @@ printScrText	ldy #0
 							iny
 							jmp -
 +							rts
-						
+
 !zone subsClearing
 clearScreen		lda #147
 							jsr PRINT
 							rts
-					
+
 clearValues		lda #$30
 							sta resultstr
 							sta resultstr+1
@@ -1876,9 +1911,9 @@ clearValues		lda #$30
 							sta result
 							sta result+1
 							sta result+2
-							rts							
+							rts
 !zone subsMath
-printdec			jsr hex2dec			
+printdec			jsr hex2dec
         			ldx #9
 l1      			lda result,x
         			bne l2
@@ -1887,9 +1922,9 @@ l1      			lda result,x
 l2      			lda result,x
         			ora #$30
 							;clc
-							;adc #S_0							
+							;adc #S_0
 							; insert other print routine here
-        			sta resultstr,x										
+        			sta resultstr,x
         			dex
         			bpl l2
         			rts
@@ -1916,15 +1951,15 @@ skip       	  rol value
            	  rol value+3
            	  dey
            	  bpl l4
-           	  rts				
+           	  rts
 
 value   		!byte 0,0,0,0
 result  		!byte 0,0,0,0,0,0,0,0,0,0
-resultstr		!scr "0000000000"					
+resultstr		!scr "0000000000"
 
 !zone dataMaps
-	  					!byte W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W	
-  						!byte W,W,W,W,W,W,S,W,W,W,W,W,W,W,W,W,W,W,W,W	
+	  					!byte W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W
+  						!byte W,W,W,W,W,W,S,W,W,W,W,W,W,W,W,W,W,W,W,W
 							;
 map						!byte W,W,W,W,W,W,S,W,W,W,W,W,W,W,W,W,W,W,W,W
 							!byte W,S,W,S,S,S,S,S,S,S,S,S,S,S,S,S,S,S,S,W
@@ -1940,8 +1975,8 @@ map						!byte W,W,W,W,W,W,S,W,W,W,W,W,W,W,W,W,W,W,W,W
 							!byte W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W
 !zone dataUi
 datUi				!media "assets\uiMc.charscreen",char,0,0,40,25
-datUiC			!media "assets\uiMc.charscreen",color,0,0,40,25	
-						
+datUiC			!media "assets\uiMc.charscreen",color,0,0,40,25
+
 !zone dataCharsets
 *=$2000
 charSet			!media "assets\uiMc.charscreen",charset
@@ -1971,7 +2006,7 @@ datW3C			!media "assets\dungeon0mc.charscreen",color,0,15,6,3
 datN3				!media "assets\dungeon0mc.charscreen",char,6,15,6,3
 datN3C			!media "assets\dungeon0mc.charscreen",color,6,15,6,3
 datE3				!media "assets\dungeon0mc.charscreen",char,12,15,6,3
-datE3C			!media "assets\dungeon0mc.charscreen",color,12,15,6,3					
+datE3C			!media "assets\dungeon0mc.charscreen",color,12,15,6,3
 
 !zone dataSprites
 spriteSword 	!media "assets\weapons.spriteproject",sprite,0,2
@@ -1990,7 +2025,7 @@ datCharScr  !scr "                    "
 						!scr " hp  000 ^          "
 						!scr " mp  000 ^          "
 						!scr "                    "
-						
+
 datSkillScr !scr "                    "
 						!scr " skills       sl pt "
 						!scr " '''''''''''''''''' "
@@ -2003,9 +2038,30 @@ datSkillScr !scr "                    "
 						!scr "                    "
 						!scr "                    "
 						!scr "                    "
+
+datInvenScr !scr "                    "
+						!scr "                    "
+						!scr "                    "
+						!scr "                    "
+						!scr "                    "
+						!scr "                    "
+						!scr "                    "
+						!scr "                    "
+						!scr "                    "
+						!scr "                    "
+						!scr "                    "
+						!scr "                    "
+
+
 strHit			!scr "hit",0
 strMiss			!scr "miss",0
-					
+!zone dataItems
+; item icons ITEMICON+ID
+					; ID, d6, +x, ST
+sword !byte 1,  1 , 0,  8
+axe		!byte 2,  1 , 2,  11
+bow 	!byte	3,	1 ,-2,  10
+
 !zone subsExternal
 !source "_includes\sound.asm"
 !source "_includes\dice.asm"
